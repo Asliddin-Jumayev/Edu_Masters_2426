@@ -1,0 +1,246 @@
+import { forwardRef, useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
+import { ChevronLeft, ChevronRight, Loader2, X } from 'lucide-react'
+import { cn, fmtMoney } from '@/lib/utils'
+import type { LabelMap, Tone } from '@/lib/labels'
+
+/* ---------------- Button ---------------- */
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'mark'
+const variants: Record<Variant, string> = {
+  primary: 'bg-brand text-brand-fg hover:opacity-90',
+  secondary: 'bg-surface text-fg border border-line hover:bg-sunken',
+  ghost: 'text-fg hover:bg-sunken',
+  danger: 'bg-danger text-white hover:opacity-90',
+  mark: 'marker font-semibold hover:brightness-95',
+}
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> { variant?: Variant; size?: 'sm' | 'md'; loading?: boolean }
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 'secondary', size = 'md', loading, className, children, disabled, type = 'button', ...p }, ref) => (
+  <button ref={ref} type={type} disabled={disabled || loading}
+    className={cn('inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+      size === 'sm' ? 'h-8 px-2.5 text-[13px]' : 'h-9 px-3.5', variants[variant], className)} {...p}>
+    {loading && <Loader2 className="size-4 animate-spin" aria-hidden />}
+    {children}
+  </button>
+))
+Button.displayName = 'Button'
+
+/* ---------------- Inputs ---------------- */
+const inputCls = 'w-full rounded-md border border-line bg-surface px-3 py-2 text-fg placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:bg-sunken disabled:text-muted'
+export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(({ className, ...p }, ref) => (
+  <input ref={ref} className={cn(inputCls, 'h-9 py-0', className)} {...p} />
+))
+Input.displayName = 'Input'
+export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(({ className, ...p }, ref) => (
+  <textarea ref={ref} rows={3} className={cn(inputCls, className)} {...p} />
+))
+Textarea.displayName = 'Textarea'
+export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(({ className, children, ...p }, ref) => (
+  <select ref={ref} className={cn(inputCls, 'h-9 py-0 pr-8', className)} {...p}>{children}</select>
+))
+Select.displayName = 'Select'
+
+export function Field({ label, error, hint, children, className, required }: { label?: ReactNode; error?: string; hint?: ReactNode; children: ReactNode; className?: string; required?: boolean }) {
+  return (
+    <label className={cn('block', className)}>
+      {label && <span className="mb-1 block text-[13px] font-medium">{label}{required && <span className="ml-0.5 text-danger">*</span>}</span>}
+      {children}
+      {hint && !error && <span className="mt-1 block text-xs text-muted">{hint}</span>}
+      {error && <span role="alert" className="mt-1 block text-xs text-danger">{error}</span>}
+    </label>
+  )
+}
+
+/* ---------------- Badge ---------------- */
+const tones: Record<Tone, string> = {
+  neutral: 'bg-sunken text-muted', brand: 'bg-brand-soft text-brand', success: 'bg-success-soft text-success',
+  warn: 'bg-warn-soft text-warn', danger: 'bg-danger-soft text-danger', info: 'bg-brand-soft text-brand',
+}
+export function Badge({ tone = 'neutral', children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
+  return <span className={cn('inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium', tones[tone], className)}>{children}</span>
+}
+export function StatusBadge({ map, value }: { map: LabelMap; value?: string | null }) {
+  if (!value) return <span className="text-muted">—</span>
+  const m = map[value]
+  return <Badge tone={m?.tone ?? 'neutral'}>{m?.label ?? value}</Badge>
+}
+
+/** Pul: manfiy = qizil ruchka (qarz), musbat = yashil (avans) */
+export function Money({ value, signed, className }: { value?: string | number | null; signed?: boolean; className?: string }) {
+  const n = Number(value ?? 0)
+  return (
+    <span className={cn('num whitespace-nowrap', n < 0 ? 'font-semibold text-danger' : signed && n > 0 ? 'text-success' : '', className)}>
+      {signed && n > 0 ? '+' : ''}{fmtMoney(value)}
+    </span>
+  )
+}
+
+/* ---------------- Panel / Header / Stat ---------------- */
+export function Panel({ title, actions, children, className, flush }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
+  return (
+    <section className={cn('rounded-lg border border-line bg-surface', className)}>
+      {(title || actions) && (
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+          <h2 className="font-display text-[17px] font-semibold">{title}</h2>
+          <div className="flex items-center gap-2">{actions}</div>
+        </header>
+      )}
+      <div className={flush ? '' : 'p-4'}>{children}</div>
+    </section>
+  )
+}
+
+export function PageHeader({ title, subtitle, actions }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode }) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 className="font-display text-[28px] font-semibold leading-tight">{title}</h1>
+        {subtitle && <p className="mt-0.5 text-muted">{subtitle}</p>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">{actions}</div>
+    </div>
+  )
+}
+
+export function Stat({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: 'danger' | 'success' }) {
+  return (
+    <div className="px-4 py-3">
+      <div className="text-[13px] text-muted">{label}</div>
+      <div className={cn('font-display num mt-0.5 text-[26px] font-semibold leading-tight', tone === 'danger' && 'text-danger', tone === 'success' && 'text-success')}>{value}</div>
+      {hint && <div className="mt-0.5 text-xs text-muted">{hint}</div>}
+    </div>
+  )
+}
+
+export const Spinner = ({ className }: { className?: string }) => <Loader2 className={cn('size-5 animate-spin text-muted', className)} aria-label="Yuklanmoqda" />
+
+export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-1 px-4 py-12 text-center">
+      <div className="font-display text-lg font-semibold">{title}</div>
+      {hint && <p className="max-w-sm text-muted">{hint}</p>}
+      {action && <div className="mt-3">{action}</div>}
+    </div>
+  )
+}
+
+/* ---------------- Tabs / Segmented ---------------- */
+export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: ReactNode }[]; value: T; onChange: (v: T) => void }) {
+  return (
+    <div role="tablist" className="scroll-thin mb-4 flex gap-1 overflow-x-auto border-b border-line">
+      {tabs.map((t) => (
+        <button key={t.id} role="tab" aria-selected={value === t.id} onClick={() => onChange(t.id)}
+          className={cn('-mb-px whitespace-nowrap border-b-2 px-3.5 py-2 font-medium transition-colors',
+            value === t.id ? 'border-brand text-brand' : 'border-transparent text-muted hover:text-fg')}>
+          {t.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function Segmented<T extends string>({ options, value, onChange, tones: t }: { options: { value: T; label: string }[]; value?: T; onChange: (v: T) => void; tones?: Partial<Record<T, string>> }) {
+  return (
+    <div className="inline-flex overflow-hidden rounded-md border border-line" role="radiogroup">
+      {options.map((o) => (
+        <button key={o.value} role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}
+          className={cn('px-2.5 py-1.5 text-[13px] font-medium transition-colors', value === o.value ? (t?.[o.value] ?? 'bg-brand text-brand-fg') : 'bg-surface text-muted hover:bg-sunken')}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/* ---------------- Modal (native <dialog>: fokus tuzog'i va Esc tayyor) ---------------- */
+const sizes = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-5xl' }
+export function Modal({ open, onClose, title, description, children, footer, size = 'md' }: {
+  open: boolean; onClose: () => void; title: ReactNode; description?: ReactNode; children: ReactNode; footer?: ReactNode; size?: keyof typeof sizes
+}) {
+  const ref = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const d = ref.current
+    if (!d) return
+    if (open && !d.open) d.showModal()
+    if (!open && d.open) d.close()
+  }, [open])
+  return (
+    <dialog ref={ref} onClose={onClose} onClick={(e) => { if (e.target === ref.current) onClose() }}
+      className={cn('m-auto w-[calc(100%-1.5rem)] rounded-xl border border-line bg-surface p-0 shadow-2xl', sizes[size])}>
+      {open && (
+        <div className="flex max-h-[88vh] flex-col">
+          <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+            <div>
+              <h2 className="font-display text-xl font-semibold">{title}</h2>
+              {description && <p className="mt-0.5 text-muted">{description}</p>}
+            </div>
+            <button onClick={onClose} aria-label="Yopish" className="rounded-md p-1 text-muted hover:bg-sunken hover:text-fg"><X className="size-5" /></button>
+          </header>
+          <div className="scroll-thin overflow-y-auto px-5 py-4">{children}</div>
+          {footer && <footer className="flex flex-wrap justify-end gap-2 border-t border-line bg-sunken/50 px-5 py-3">{footer}</footer>}
+        </div>
+      )}
+    </dialog>
+  )
+}
+
+export function Confirm({ open, onClose, onConfirm, title, message, confirmLabel = 'Tasdiqlash', danger, loading }: {
+  open: boolean; onClose: () => void; onConfirm: () => void; title: string; message?: ReactNode; confirmLabel?: string; danger?: boolean; loading?: boolean
+}) {
+  return (
+    <Modal open={open} onClose={onClose} title={title} size="sm"
+      footer={<><Button onClick={onClose}>Bekor qilish</Button><Button variant={danger ? 'danger' : 'primary'} loading={loading} onClick={onConfirm}>{confirmLabel}</Button></>}>
+      <div className="text-muted">{message}</div>
+    </Modal>
+  )
+}
+
+/* ---------------- DataTable ---------------- */
+export interface Column<T> { key: string; header: ReactNode; cell: (row: T) => ReactNode; className?: string; align?: 'right' | 'center' }
+export function DataTable<T>({ columns, rows, loading, onRowClick, rowKey, empty }: {
+  columns: Column<T>[]; rows: T[]; loading?: boolean; onRowClick?: (r: T) => void; rowKey: (r: T) => string | number; empty?: ReactNode
+}) {
+  return (
+    <div className="scroll-thin overflow-x-auto">
+      <table className="w-full border-collapse text-left">
+        <thead>
+          <tr className="border-b border-line bg-sunken/70 text-[13px] text-muted">
+            {columns.map((c) => (
+              <th key={c.key} scope="col" className={cn('whitespace-nowrap px-4 py-2.5 font-medium', c.align === 'right' && 'text-right', c.align === 'center' && 'text-center', c.className)}>{c.header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {loading && rows.length === 0 && Array.from({ length: 5 }).map((_, i) => (
+            <tr key={i} className="border-b border-line/70">{columns.map((c) => <td key={c.key} className="px-4 py-3"><div className="h-4 w-3/4 animate-pulse rounded bg-sunken" /></td>)}</tr>
+          ))}
+          {rows.map((r) => (
+            <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined}
+              className={cn('border-b border-line/70 last:border-0', onRowClick && 'cursor-pointer hover:bg-sunken/60')}>
+              {columns.map((c) => (
+                <td key={c.key} className={cn('px-4 py-2.5 align-middle', c.align === 'right' && 'text-right', c.align === 'center' && 'text-center', c.className)}>{c.cell(r)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {!loading && rows.length === 0 && (empty ?? <EmptyState title="Ma'lumot topilmadi" hint="Filtrlarni o'zgartirib ko'ring yoki yangi yozuv qo'shing." />)}
+    </div>
+  )
+}
+
+export function Pager({ total, limit, offset, onChange }: { total: number; limit: number; offset: number; onChange: (offset: number) => void }) {
+  if (total <= limit) return total > 0 ? <div className="px-4 py-2.5 text-[13px] text-muted">Jami: {total}</div> : null
+  const from = offset + 1, to = Math.min(offset + limit, total)
+  return (
+    <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-2.5 text-[13px] text-muted">
+      <span className="num">{from}–{to} / {total}</span>
+      <div className="flex gap-1">
+        <Button size="sm" disabled={offset === 0} onClick={() => onChange(Math.max(0, offset - limit))} aria-label="Oldingi"><ChevronLeft className="size-4" /></Button>
+        <Button size="sm" disabled={to >= total} onClick={() => onChange(offset + limit)} aria-label="Keyingi"><ChevronRight className="size-4" /></Button>
+      </div>
+    </div>
+  )
+}
+
+export function Toolbar({ children }: { children: ReactNode }) {
+  return <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">{children}</div>
+}

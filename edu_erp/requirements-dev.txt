@@ -1,0 +1,6 @@
+-r requirements.txt
+aiosqlite
+pytest
+pytest-asyncio
+httpx
+pypdf

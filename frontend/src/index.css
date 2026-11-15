@@ -1,0 +1,114 @@
+@import "tailwindcss";
+@import "@fontsource-variable/onest";
+@import "@fontsource-variable/fraunces";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Dizayn tizimi: daftar (katak qog'oz) + siyoh-ko'k + marker + qizil ruchka.
+   Qorong'i rejim — doska. */
+@theme inline {
+  --font-sans: "Onest Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces Variable", Georgia, "Times New Roman", serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-fg: var(--brand-fg);
+  --color-brand-soft: var(--brand-soft);
+  --color-mark: var(--mark);
+  --color-mark-fg: var(--mark-fg);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-side: var(--side);
+  --color-side-fg: var(--side-fg);
+}
+
+:root {
+  --bg: #f3f5fa;
+  --surface: #ffffff;
+  --sunken: #eceff7;
+  --fg: #19214f;
+  --muted: #5b6488;
+  --line: #d8dcec;
+  --brand: #2b3a9c;
+  --brand-fg: #ffffff;
+  --brand-soft: #e4e8fb;
+  --mark: #ffdf4d;
+  --mark-fg: #19214f;
+  --danger: #c7243f;
+  --danger-soft: #fde8ec;
+  --success: #17794f;
+  --success-soft: #def4e9;
+  --warn: #a15c00;
+  --warn-soft: #fdefd2;
+  --side: #19214f;
+  --side-fg: #d5daf3;
+  --grid: rgba(43, 58, 156, 0.055);
+}
+.dark {
+  --bg: #101a19;
+  --surface: #17232a;
+  --sunken: #131e1d;
+  --fg: #e9efe6;
+  --muted: #9fb0aa;
+  --line: #2b3c3b;
+  --brand: #8fa2ff;
+  --brand-fg: #0d1230;
+  --brand-soft: #232f58;
+  --mark: #f3dd6b;
+  --mark-fg: #1a1d0a;
+  --danger: #ff8a9b;
+  --danger-soft: #3d1f27;
+  --success: #6fdca8;
+  --success-soft: #16332a;
+  --warn: #f1bd62;
+  --warn-soft: #3a2c10;
+  --side: #0b1413;
+  --side-fg: #a9bab4;
+  --grid: rgba(233, 239, 230, 0.04);
+}
+
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 26px 26px;
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+::selection { background: var(--mark); color: var(--mark-fg); }
+
+.font-display { font-family: var(--font-display); font-variation-settings: "opsz" 48; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Marker surtmasi: faol menyu bandi uchun. Notekis burchaklar qo'lda surtilgandek. */
+.marker { background: var(--mark); color: var(--mark-fg); border-radius: 7px 15px 9px 13px / 11px 8px 13px 9px; }
+
+dialog { color: var(--fg); }
+dialog::backdrop { background: rgb(10 14 40 / 0.5); backdrop-filter: blur(2px); }
+dialog[open] { animation: pop 0.14s ease-out; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(0.985); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+.scroll-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
