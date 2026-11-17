@@ -14,8 +14,8 @@ log = logging.getLogger("email")
 # SMTP sozlamalari .env orqali boshqariladi
 DEFAULT_SMTP_HOST = ""
 DEFAULT_SMTP_PORT = 587
-DEFAULT_SMTP_USER = ""
-DEFAULT_SMTP_PASS = ""
+DEFAULT_SMTP_USER = "example@gmail.com"
+DEFAULT_SMTP_PASS = "" # googledan olib qo`yiladi 16 xonalik
 
 
 @dataclass
