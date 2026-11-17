@@ -11,7 +11,7 @@
 * **Onlayn Ariza (Lid) olish:** Saytga kirgan mijozlar ism va telefonlarini qoldirishi mumkin. Ariza to‘g‘ridan-to‘g‘ri ichki CRM tizimiga tushadi va menejerlarga biriktiriladi.
 * **Sertifikat tekshirish:** Sayt orqali har qanday tashrif buyuruvchi sertifikat seriya raqamini kiritib yoki QR-kodni skanerlab, sertifikatning haqiqiyligini onlayn tasdiqlashi mumkin.
 
-### 2. 🔐 Yopiq Xodimlar va Admin Portali (`/afdmr2426` yoki `/login`)
+### 2. 🔐 Yopiq Xodimlar va Admin Portali 
 * **Mustahkam xavfsizlik:** Saytda begona foydalanuvchilar o‘zicha xodim sifatida ro‘yxatdan o‘ta olmaydi (`Self-registration yo'q`).
 * **Barcha xodimlarni Bosh Administrator yaratadi:** Admin tizim ichidan (`/settings/employees`) xodimlarni qo‘shadi va ularga tegishli rollarni (Menejer, O‘qituvchi, Buxgalter) biriktiradi.
 * **Rolga asoslangan kirish huquqi (RBAC):**
