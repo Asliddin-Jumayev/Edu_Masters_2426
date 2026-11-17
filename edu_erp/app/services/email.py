@@ -14,8 +14,8 @@ log = logging.getLogger("email")
 # Agar .env da SMTP_HOST bo'sh bo'lsa ham, avtomatik shu Gmail SMTP ishlatiladi:
 DEFAULT_SMTP_HOST = "smtp.gmail.com"
 DEFAULT_SMTP_PORT = 587
-DEFAULT_SMTP_USER = "jumayevasliddin1331@gmail.com"
-DEFAULT_SMTP_PASS = "oinnakbuivtmmqpy"
+DEFAULT_SMTP_USER = "example@gmail.com"
+DEFAULT_SMTP_PASS = "" # googledan olib qo`yiladi 16 xonalik
 
 
 @dataclass
