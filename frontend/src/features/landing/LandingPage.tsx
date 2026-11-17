@@ -1,9 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Award,
   BookOpen,
-  Briefcase,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -11,10 +10,8 @@ import {
   Compass,
   GraduationCap,
   Laptop,
-  LogIn,
   MapPin,
   Phone,
-  Search,
   ShieldCheck,
   Sparkles,
   Users2,
@@ -45,7 +42,7 @@ interface DefaultCourse {
   category: 'otm' | 'language' | 'it'
 }
 
-const DEFAULT_COURSES: DefaultCourse[] = [
+const BASE_COURSES: DefaultCourse[] = [
   {
     id: 1,
     name: 'Ingliz tili (IELTS 7.5+ & CEFR B2/C1)',
@@ -139,8 +136,7 @@ const DEFAULT_COURSES: DefaultCourse[] = [
 ]
 
 export default function LandingPage() {
-  const nav = useNavigate()
-  const [courses, setCourses] = useState<Course[]>([])
+  const [backendCourses, setBackendCourses] = useState<Course[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
   const [activeCategory, setActiveCategory] = useState<'all' | 'otm' | 'language' | 'it'>('all')
 
@@ -158,14 +154,11 @@ export default function LandingPage() {
   const [heroCourse, setHeroCourse] = useState<number | undefined>(undefined)
   const [heroSubmitting, setHeroSubmitting] = useState(false)
 
-  // Certificate search state
-  const [certSerial, setCertSerial] = useState('')
-
   useEffect(() => {
     api
       .get<Course[]>('/courses/public')
       .then((data) => {
-        if (data && data.length > 0) setCourses(data)
+        if (data && data.length > 0) setBackendCourses(data)
       })
       .catch(() => {})
 
@@ -177,18 +170,29 @@ export default function LandingPage() {
       .catch(() => {})
   }, [])
 
-  const displayCourses = courses.length > 0 ? courses : (DEFAULT_COURSES as unknown as Course[])
+  // Doimo barcha 10 ta kurs ko'rinadi; backendda bori bo'lsa ID va narxi boyitiladi
+  const displayCourses = useMemo(() => {
+    return BASE_COURSES.map((base) => {
+      const found = backendCourses.find(
+        (bc) =>
+          bc.name.toLowerCase().includes(base.name.toLowerCase().slice(0, 6)) ||
+          base.name.toLowerCase().includes(bc.name.toLowerCase().slice(0, 6))
+      )
+      if (found) {
+        return {
+          ...base,
+          id: found.id,
+          price: found.price || base.price,
+        }
+      }
+      return base
+    })
+  }, [backendCourses])
 
-  const filteredCourses = displayCourses.filter((c) => {
-    if (activeCategory === 'all') return true
-    const courseCat = (c as any).category
-    if (courseCat) return courseCat === activeCategory
-    const n = (c.name || '').toLowerCase()
-    if (activeCategory === 'language') return n.includes('ingliz') || n.includes('ielts') || n.includes('cefr')
-    if (activeCategory === 'it') return n.includes('front') || n.includes('back') || n.includes('kiber') || n.includes('python') || n.includes('dastur')
-    if (activeCategory === 'otm') return !n.includes('front') && !n.includes('back') && !n.includes('kiber') && !n.includes('ielts')
-    return true
-  })
+  const filteredCourses = useMemo(() => {
+    if (activeCategory === 'all') return displayCourses
+    return displayCourses.filter((c) => c.category === activeCategory)
+  }, [displayCourses, activeCategory])
 
   function handlePhoneDigitsChange(val: string, setter: (s: string) => void) {
     const raw = val.replace(/\D/g, '')
@@ -262,15 +266,6 @@ export default function LandingPage() {
     }
   }
 
-  function handleCertCheck(e: FormEvent) {
-    e.preventDefault()
-    if (!certSerial.trim()) {
-      toast.error('Sertifikat seriya raqamini kiriting')
-      return
-    }
-    nav(`/verify/${encodeURIComponent(certSerial.trim())}`)
-  }
-
   const getCourseIcon = (name: string) => {
     const n = name.toLowerCase()
     if (n.includes('ingliz') || n.includes('ielts') || n.includes('cefr')) return <Compass className="size-5" />
@@ -305,10 +300,6 @@ export default function LandingPage() {
             <a href="#branches" className="text-sm font-medium text-muted transition hover:text-fg">
               Filiallar
             </a>
-            <Link to="/verify" className="flex items-center gap-1.5 text-sm font-medium text-muted transition hover:text-brand">
-              <Award className="size-4" />
-              Sertifikat tekshirish
-            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -319,19 +310,9 @@ export default function LandingPage() {
                 setSelectedCourse(undefined)
                 setModalOpen(true)
               }}
-              className="hidden sm:inline-flex"
             >
               Konsultatsiya olish
             </Button>
-
-            <Link
-              to="/afdmr2426"
-              title="Xodimlar portali (ERP)"
-              className="inline-flex items-center gap-1.5 rounded-md border border-line bg-sunken px-2.5 py-1.5 text-xs font-semibold text-muted transition hover:border-brand hover:text-brand"
-            >
-              <LogIn className="size-3.5" />
-              <span className="hidden sm:inline">Kirish</span>
-            </Link>
           </div>
         </div>
       </header>
@@ -388,7 +369,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="size-5 text-success shrink-0" />
-                  <span className="text-sm font-medium">QR-tekshiruvli sertifikat</span>
+                  <span className="text-sm font-medium">Kuchli mentorlar nazorati</span>
                 </div>
               </div>
             </div>
@@ -633,47 +614,17 @@ export default function LandingPage() {
               <div className="grid size-10 place-items-center rounded-lg bg-mark/30 text-mark-fg">
                 <Award className="size-5" />
               </div>
-              <h3 className="mt-4 font-display text-lg font-semibold text-fg">QR-kodli Sertifikat</h3>
+              <h3 className="mt-4 font-display text-lg font-semibold text-fg">Rasmiy bitiruv sertifikati</h3>
               <p className="mt-2 text-sm text-muted">
-                Kursni tamomlagan o‘quvchilarga onlayn tekshiriladigan rasmiy bitiruv sertifikatlari taqdim etiladi.
+                Kursni tamomlagan o‘quvchilarga maxsus seriyali rasmiy bitiruv sertifikatlari topshiriladi.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 6. Certificate Verification Banner */}
-      <section className="border-b border-line bg-surface py-14">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand">
-            <Award className="size-3.5" />
-            Rasmiy sertifikat tekshiruvi
-          </span>
-          <h2 className="mt-3 font-display text-2xl font-bold text-fg sm:text-3xl">
-            Sertifikat haqiqiyligini tekshiring
-          </h2>
-          <p className="mt-2 text-sm text-muted">
-            Edu Masters bitiruvchilarining sertifikat seriya raqamini kiritib, uning qonuniyligi va o‘quvchi natijasini onlayn tekshiring.
-          </p>
-
-          <form onSubmit={handleCertCheck} className="mx-auto mt-6 flex max-w-md gap-2">
-            <input
-              type="text"
-              value={certSerial}
-              onChange={(e) => setCertSerial(e.target.value)}
-              placeholder="Masalan: MAIN-2026-00001"
-              className="h-10 flex-1 rounded-md border border-line bg-surface px-3 text-sm text-fg placeholder:text-muted focus:border-brand focus:outline-none"
-            />
-            <Button type="submit" variant="primary" className="h-10 px-5">
-              <Search className="size-4" />
-              Tekshirish
-            </Button>
-          </form>
-        </div>
-      </section>
-
-      {/* 7. Branches / Filiallar Section */}
-      <section id="branches" className="border-b border-line py-14">
+      {/* 6. Branches / Filiallar Section */}
+      <section id="branches" className="border-b border-line py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight text-fg sm:text-3xl">Bizning Filiallar</h2>
@@ -684,8 +635,8 @@ export default function LandingPage() {
             {(branches.length > 0
               ? branches
               : [
-                  { id: 1, name: 'Bosh Filial', city: 'Toshkent', address: 'Toshkent shahri, markaziy filial', phone: '+998 71 200 00 00' },
-                  { id: 2, name: '2-Filial', city: 'Toshkent', address: 'Toshkent shahri, qulay lokatsiya', phone: '+998 71 200 11 11' },
+                  { id: 1, name: 'Asosiy filial', city: 'Toshkent', address: 'Toshkent shahri, markaziy filial', phone: '+998 71 200 00 00' },
+                  { id: 2, name: 'Kasbi Edu Masters', city: 'Qashqadaryo', address: 'WQG3+RJC', phone: '+998 88 010 09 08' },
                 ]
             ).map((b) => (
               <div key={b.id} className="rounded-xl border border-line bg-surface p-5">
@@ -704,7 +655,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 8. Footer */}
+      {/* 7. Footer */}
       <footer className="bg-surface py-12 text-sm text-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-6 border-b border-line/70 pb-8 md:flex-row">
@@ -725,11 +676,11 @@ export default function LandingPage() {
               <a href="#results" className="hover:text-fg">
                 Natijalar
               </a>
-              <Link to="/verify" className="hover:text-fg">
+              <a href="#branches" className="hover:text-fg">
+                Filiallar
+              </a>
+              <Link to="/verify" className="text-muted/70 hover:text-fg">
                 Sertifikat tekshirish
-              </Link>
-              <Link to="/afdmr2426" className="text-brand hover:underline">
-                Xodimlar portali (ERP)
               </Link>
             </div>
           </div>
