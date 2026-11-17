@@ -82,14 +82,15 @@ async def lead_funnel(db: MyDb, user: FinanceUser, branch_id: int | None = None,
                       date_from: dt.date | None = None, date_to: dt.date | None = None):
     ids = branch_ids_for(user, branch_id)
     start, end = _range(date_from, date_to)
+    join_cond = ((Lead.status_id == LeadStatus.id) &
+                 (Lead.created_at >= dt.datetime.combine(start, dt.time.min)) &
+                 (Lead.created_at <= dt.datetime.combine(end, dt.time.max)))
+    if ids is not None:
+        join_cond = join_cond & Lead.branch_id.in_(ids)
     q = (select(LeadStatus.id, LeadStatus.name, LeadStatus.is_won, LeadStatus.is_lost, func.count(Lead.id))
-         .outerjoin(Lead, (Lead.status_id == LeadStatus.id) &
-                    (Lead.created_at >= dt.datetime.combine(start, dt.time.min)) &
-                    (Lead.created_at <= dt.datetime.combine(end, dt.time.max)))
+         .outerjoin(Lead, join_cond)
          .group_by(LeadStatus.id, LeadStatus.name, LeadStatus.is_won, LeadStatus.is_lost, LeadStatus.position)
          .order_by(LeadStatus.position))
-    if ids is not None:
-        q = q.where((Lead.id.is_(None)) | (Lead.branch_id.in_(ids)))
     return {"period": {"from": start, "to": end},
             "stages": [{"status_id": i, "name": n, "is_won": w, "is_lost": l, "count": c}
                        for i, n, w, l, c in (await db.execute(q)).all()]}

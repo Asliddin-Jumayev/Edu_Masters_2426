@@ -1,7 +1,7 @@
 import datetime as dt
 from decimal import Decimal
 import asyncio
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from sqlalchemy import func, select
 from app.models.courses import Course
 from app.models.branches import Branch
@@ -21,6 +21,7 @@ from app.utils.checked import check_ident, safe_commit
 from app.utils.deps import MyDb
 from app.utils.pagination import Page, Pagination, paginate
 from app.utils.permissions import AcademicUser, AuthUser, ManagerUser
+from app.utils.rate_limit import limiter
 from app.utils.roles import ADMIN, MANAGER
 from app.utils.time import today, utcnow
 
@@ -142,7 +143,8 @@ cert_router = APIRouter(prefix="/certificates", tags=["Certificates"])
 
 
 @cert_router.get("/verify/{serial}", response_model=CertificateVerify)
-async def verify(serial: str, db: MyDb):
+@limiter.limit("60/minute")
+async def verify(request: Request, serial: str, db: MyDb):
     """Ochiq endpoint (auth yo'q): sertifikat haqiqiyligini tekshirish. Faqat minimal ma'lumot."""
     row = (await db.execute(
         select(Certificate, Student.first_name, Student.last_name, Course.name)
@@ -182,8 +184,20 @@ async def issue(data: CertificateIssue, db: MyDb, user: ManagerUser):
     branch = await db.get(Branch, group.branch_id)
     year = today().year
     prefix = f"{branch.code}-{year}-"
-    n = await db.scalar(select(func.count(Certificate.id)).where(Certificate.serial_number.like(prefix + "%"))) or 0
-    cert = Certificate(student_id=student.id, group_id=group.id, serial_number=f"{prefix}{n + 1:05d}",
+    # To'qnashuv bo'lmasligi uchun oxirgi maksimal raqam olinadi (o'chirilgan sertifikatlardan keyin ham raqam buzilmaydi)
+    last_serial = await db.scalar(
+        select(Certificate.serial_number)
+        .where(Certificate.serial_number.like(prefix + "%"))
+        .order_by(Certificate.serial_number.desc())
+        .limit(1)
+    )
+    last_num = 0
+    if last_serial:
+        try:
+            last_num = int(last_serial.split("-")[-1])
+        except (ValueError, IndexError):
+            last_num = 0
+    cert = Certificate(student_id=student.id, group_id=group.id, serial_number=f"{prefix}{last_num + 1:05d}",
                        file_url=data.file_url, issued_at=today(), issued_by=user.id)
     db.add(cert)
     add_audit(db, user, "create", "certificate", None, new={"student_id": student.id, "group_id": group.id})

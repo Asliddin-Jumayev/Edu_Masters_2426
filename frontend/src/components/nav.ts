@@ -7,7 +7,7 @@ export interface NavGroup { title?: string; items: NavItem[] }
 
 const all = () => true
 export const NAV: NavGroup[] = [
-  { items: [{ to: '/', label: 'Bosh sahifa', icon: LayoutDashboard, show: all, end: true }] },
+  { items: [{ to: '/dashboard', label: 'Bosh sahifa', icon: LayoutDashboard, show: all, end: true }] },
   { title: "O'quv jarayoni", items: [
     { to: '/students', label: "O'quvchilar", icon: Users, show: all },
     { to: '/groups', label: 'Guruhlar', icon: GraduationCap, show: all },

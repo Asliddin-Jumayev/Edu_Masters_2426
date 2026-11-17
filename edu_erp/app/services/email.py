@@ -11,11 +11,11 @@ from app.utils.config import settings
 
 log = logging.getLogger("email")
 
-# Agar .env da SMTP_HOST bo'sh bo'lsa ham, avtomatik shu Gmail SMTP ishlatiladi:
-DEFAULT_SMTP_HOST = "smtp.gmail.com"
+# SMTP sozlamalari .env orqali boshqariladi
+DEFAULT_SMTP_HOST = ""
 DEFAULT_SMTP_PORT = 587
-DEFAULT_SMTP_USER = "jumayevasliddin1331@gmail.com"
-DEFAULT_SMTP_PASS = "oinnakbuivtmmqpy"
+DEFAULT_SMTP_USER = ""
+DEFAULT_SMTP_PASS = ""
 
 
 @dataclass

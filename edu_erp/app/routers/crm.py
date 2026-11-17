@@ -1,5 +1,5 @@
 import datetime as dt
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import or_, select
 from app.models.branches import Branch
 from app.models.courses import Course
@@ -10,7 +10,7 @@ from app.models.students import Student
 from app.schemes.common import Message
 from app.schemes.crm import (ActivityCreate, ActivityResponse, LeadConvert, LeadCreate, LeadResponse, LeadSourceIn,
                              LeadSourceResponse, LeadStatusChange, LeadStatusIn, LeadStatusResponse, LeadUpdate,
-                             TaskCreate, TaskResponse, TaskUpdate, TrialCreate, TrialResponse, TrialResult)
+                             PublicLeadIn, TaskCreate, TaskResponse, TaskUpdate, TrialCreate, TrialResponse, TrialResult)
 from app.schemes.students import StudentResponse
 from app.services.enrollment import enroll_student
 from app.services.messaging import notify
@@ -20,6 +20,7 @@ from app.utils.checked import check_ident, safe_commit
 from app.utils.deps import MyDb
 from app.utils.pagination import Page, Pagination, paginate
 from app.utils.permissions import AuthUser, ManagerUser
+from app.utils.rate_limit import limiter
 from app.utils.roles import ADMIN, MANAGER
 from app.utils.time import utcnow
 
@@ -110,6 +111,53 @@ async def _check_assignee(db, emp_id: int):
     emp = await db.get(Employee, emp_id)
     if emp is None or not emp.is_active:
         raise HTTPException(400, "Mas'ul xodim topilmadi yoki faol emas")
+
+
+@router.post("/public", response_model=Message, status_code=201, summary="Bosh sahifadan ariza (lid) qoldirish")
+@limiter.limit("5/minute")
+async def create_public_lead(request: Request, data: PublicLeadIn, db: MyDb):
+    """Bosh sahifadan tashrif buyuruvchilar kursga yozilish yoki konsultatsiya so'rab qoldirgan ariza."""
+    branch_id = data.branch_id
+    if branch_id is None:
+        branch_id = await db.scalar(select(Branch.id).where(Branch.is_active == True).order_by(Branch.id).limit(1)) or 1
+    else:
+        await check_ident(db, Branch, branch_id, "Filial topilmadi")
+
+    if data.course_id:
+        await check_ident(db, Course, data.course_id, "Kurs topilmadi")
+
+    # Manba: 'Veb-sayt' yoki birinchi faol manba
+    site_source = await db.scalar(select(LeadSource.id).where(LeadSource.name.ilike("%sayt%") | LeadSource.name.ilike("%web%")).limit(1))
+    if site_source is None:
+        site_source = await db.scalar(select(LeadSource.id).where(LeadSource.is_active == True).limit(1))
+
+    # Boshlang'ich status
+    status_id = await db.scalar(select(LeadStatus.id).where(LeadStatus.is_won.is_(False), LeadStatus.is_lost.is_(False))
+                                .order_by(LeadStatus.position, LeadStatus.id).limit(1))
+    if status_id is None:
+        raise HTTPException(400, "Lid bosqichlari sozlanmagan")
+
+    # Qayta ariza bo'lsa yangilaymiz
+    dup = await db.scalar(select(Lead).where(Lead.phone == data.phone, Lead.status_id == status_id))
+    if dup:
+        if data.comment:
+            dup.comment = f"{(dup.comment or '')} | Qayta: {data.comment}"[:500]
+            await safe_commit(db)
+        return Message(msg="Arizangiz qabul qilindi. Tez orada menejerlarimiz siz bilan bog'lanishadi!")
+
+    obj = Lead(
+        branch_id=branch_id,
+        first_name=data.first_name,
+        phone=data.phone,
+        source_id=site_source,
+        course_id=data.course_id,
+        status_id=status_id,
+        comment=data.comment or "Veb-saytdan ariza",
+        created_by=None,
+    )
+    db.add(obj)
+    await safe_commit(db)
+    return Message(msg="Arizangiz muvaffaqiyatli qabul qilindi. Tez orada menejerlarimiz siz bilan bog'lanishadi!")
 
 
 @router.post("/", response_model=LeadResponse, status_code=201)

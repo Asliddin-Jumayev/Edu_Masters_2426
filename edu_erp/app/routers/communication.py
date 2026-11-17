@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from app.models.communication import Notification, SmsLog, SmsTemplate
 from app.models.crm import Lead
-from app.models.enums import SmsStatus
+from app.models.enums import SmsStatus, StudentStatus
 from app.models.students import Student
 from app.schemes.common import Message
 from app.schemes.communication import (DebtReminder, NotificationResponse, SmsResponse, SmsSend, SmsTemplateIn,
@@ -81,7 +81,7 @@ async def debt_reminders(data: DebtReminder, db: MyDb, user: FinanceUser):
     """Qarzdor o'quvchilarga 'payment_reminder' shabloni bilan ommaviy SMS (bir martada 500 tagacha)."""
     tpl = await _template(db, "payment_reminder")
     ids = branch_ids_for(user, data.branch_id)
-    stmt = select(Student).where(Student.balance < -data.min_debt).limit(500)
+    stmt = select(Student).where(Student.status == StudentStatus.ACTIVE, Student.balance < -data.min_debt).limit(500)
     if ids is not None:
         stmt = stmt.where(Student.branch_id.in_(ids))
     sent = skipped = 0

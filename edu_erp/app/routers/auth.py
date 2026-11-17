@@ -62,7 +62,7 @@ async def _track_device(db, emp: Employee, request: Request, background: Backgro
         log.exception("Qurilmani qayd etib bo'lmadi (login davom etadi)")
         return
 
-    # 3. Agar qurilma yangi bo'lsa va foydalanuvchida email bo'lsa -> Xuddi test-email kabi darhol yuboramiz!
+    # 3. Agar qurilma yangi bo'lsa va foydalanuvchida email bo'lsa -> fon vazifasida (background) yuboramiz
     if (is_new_device or alert) and user_email:
         when = (utcnow() + timedelta(hours=settings.TIMEZONE_OFFSET_HOURS)).strftime("%d.%m.%Y %H:%M") + f" (UTC+{settings.TIMEZONE_OFFSET_HOURS})"
         subject, text, html = mail.new_device_message(
@@ -72,14 +72,16 @@ async def _track_device(db, emp: Employee, request: Request, background: Backgro
             when=when,
             profile_url=f"{settings.FRONTEND_URL.rstrip('/')}/profile",
         )
-        try:
-            await mail.send_email(user_email, subject, text, html)
-            print(f"\n>>> [GMAIL SENT] Yangi qurilma xati {user_email} manziliga yuborildi! ({label})\n")
-        except Exception as e:  # noqa: BLE001
-            print(f"\n>>> [GMAIL ERROR] Xat yuborishda xato: {e}\n")
-            log.exception("Yangi qurilma xatini yuborishda xatolik")
+        async def _safe_send():
+            try:
+                await mail.send_email(user_email, subject, text, html)
+                log.info("Yangi qurilma xabarnomasi %s manziliga yuborildi (%s)", user_email, label)
+            except Exception:  # noqa: BLE001
+                log.exception("Yangi qurilma xatini yuborishda xatolik yuz berdi")
+
+        background.add_task(_safe_send)
     else:
-        print(f"\n>>> [DEVICE INFO] Xat yuborilmadi: is_new_device={is_new_device}, alert={alert}, email='{user_email}'\n")
+        log.debug("Xat yuborilmadi: is_new_device=%s, alert=%s, email='%s'", is_new_device, alert, user_email)
 
 
 @router.post("/login", response_model=TokenPair)

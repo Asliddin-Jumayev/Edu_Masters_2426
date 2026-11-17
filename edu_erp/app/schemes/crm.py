@@ -39,6 +39,14 @@ class LeadStatusResponse(ORM):
     is_lost: bool
 
 
+class PublicLeadIn(BaseModel):
+    first_name: str = Field(min_length=1, max_length=60)
+    phone: Phone
+    course_id: int | None = None
+    branch_id: int | None = None
+    comment: str | None = None
+
+
 class LeadCreate(BaseModel):
     branch_id: int
     first_name: str = Field(min_length=1, max_length=60)

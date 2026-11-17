@@ -9,7 +9,7 @@ from app.schemes.payroll import (PayrollAdjust, PayrollCalculate, PayrollRespons
 from app.schemes.common import Message
 from app.services.finance import q2
 from app.services.payroll import calculate
-from app.utils.access import ensure_branch, has_role
+from app.utils.access import ensure_branch, has_role, scoped
 from app.utils.audit import add_audit, snapshot
 from app.utils.checked import check_ident, safe_commit
 from app.utils.deps import MyDb
@@ -96,9 +96,12 @@ async def calculate_payrolls(data: PayrollCalculate, db: MyDb, user: AccountantU
 async def list_payrolls(db: MyDb, user: AuthUser, params: Pagination, employee_id: int | None = None,
                         period_month: str | None = None,
                         status_: PayrollStatus | None = Query(None, alias="status")):
-    stmt = select(Payroll).order_by(Payroll.period_month.desc(), Payroll.id.desc())
+    stmt = (select(Payroll).join(Employee, Employee.id == Payroll.employee_id)
+            .order_by(Payroll.period_month.desc(), Payroll.id.desc()))
+    stmt = scoped(stmt, Employee.branch_id, user)
     if has_role(user, ADMIN, MANAGER, ACCOUNTANT):
         if employee_id is not None:
+            await _emp(db, user, employee_id)
             stmt = stmt.where(Payroll.employee_id == employee_id)
     else:  # o'qituvchi faqat o'z maoshini ko'radi
         stmt = stmt.where(Payroll.employee_id == user.id)

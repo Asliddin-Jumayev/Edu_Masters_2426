@@ -28,6 +28,12 @@ async def list_courses(db: MyDb, user: AuthUser, is_active: bool | None = None, 
     return (await db.execute(stmt)).scalars().all()
 
 
+@router.get("/public", response_model=list[CourseResponse], summary="Ochiq kurslar ro'yxati (Bosh sahifa uchun)")
+async def list_public_courses(db: MyDb):
+    """Bosh sahifada (landing page) ko'rsatish uchun faol kurslar ro'yxati (auth shart emas)."""
+    return (await db.execute(select(Course).where(Course.is_active == True).order_by(Course.name))).scalars().all()
+
+
 @router.get("/{course_id}", response_model=CourseResponse)
 async def get_course(course_id: int, db: MyDb, user: AuthUser):
     return await check_ident(db, Course, course_id, "Kurs topilmadi")

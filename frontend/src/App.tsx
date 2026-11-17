@@ -7,6 +7,7 @@ import { can, hasRole } from '@/lib/permissions'
 import type { Me } from '@/api/types'
 
 const L = (f: () => Promise<{ default: React.ComponentType }>) => lazy(f)
+const Landing = L(() => import('@/features/landing/LandingPage'))
 const Login = L(() => import('@/features/auth/LoginPage'))
 const Verify = L(() => import('@/features/misc/VerifyPage'))
 const Dashboard = L(() => import('@/features/dashboard/DashboardPage'))
@@ -62,11 +63,13 @@ export default function App() {
   return (
     <Suspense fallback={<div className="grid min-h-screen place-items-center"><Spinner className="size-7" /></div>}>
       <Routes>
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/afdmr2426" element={<Login />} />
         <Route path="/verify" element={<Verify />} />
         <Route path="/verify/:serial" element={<Verify />} />
         <Route element={<RequireAuth><AppShell /></RequireAuth>}>
-          <Route index element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="students" element={<Students />} />
           <Route path="students/:id" element={<StudentDetail />} />
           <Route path="groups" element={<Groups />} />

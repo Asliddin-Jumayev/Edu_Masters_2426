@@ -10,7 +10,8 @@ export default function LoginPage() {
   const token = useAuth((s) => s.accessToken)
   const { setTokens, setMe } = useAuth()
   const nav = useNavigate()
-  const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
+  const rawFrom = (useLocation().state as { from?: string } | null)?.from
+  const from = rawFrom && rawFrom !== '/' && rawFrom !== '/afdmr2426' && rawFrom !== '/login' ? rawFrom : '/dashboard'
   const [phone, setPhone] = useState('')
   const [pw, setPw] = useState('')
   const [show, setShow] = useState(false)

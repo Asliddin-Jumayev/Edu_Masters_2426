@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Bell, Building2, LogOut, Menu, Monitor, Moon, ShieldAlert, Sun, UserCircle2, X } from 'lucide-react'
+import { Bell, Building2, Globe, LogOut, Menu, Monitor, Moon, ShieldAlert, Sun, UserCircle2, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { useGet, useMut } from '@/api/hooks'
 import type { Branch, Me, Notification, Page } from '@/api/types'
@@ -95,7 +95,7 @@ function BranchSwitcher({ me }: { me?: Me }) {
 function Sidebar({ me, onNavigate }: { me?: Me; onNavigate?: () => void }) {
   return (
     <nav aria-label="Asosiy menyu" className="scroll-thin flex h-full flex-col gap-4 overflow-y-auto px-3 py-4">
-      <Link to="/" onClick={onNavigate} className="mb-1 flex items-center gap-2.5 px-2">
+      <Link to="/dashboard" onClick={onNavigate} className="mb-1 flex items-center gap-2.5 px-2">
         <span className="grid size-8 place-items-center rounded-lg bg-mark"><span className="block h-3 w-4 border-y-[3px] border-mark-fg" /></span>
         <span className="font-display text-lg font-semibold text-white">Edu Masters</span>
       </Link>
@@ -138,6 +138,7 @@ function UserMenu({ me }: { me?: Me }) {
       </button>
       {open && (
         <div role="menu" className="absolute right-0 z-40 mt-2 w-52 rounded-lg border border-line bg-surface p-1 shadow-xl">
+          <Link role="menuitem" to="/" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 text-muted hover:bg-sunken hover:text-fg"><Globe className="size-4" />Asosiy sayt</Link>
           <Link role="menuitem" to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-sunken"><UserCircle2 className="size-4" />Profil</Link>
           <button role="menuitem" onClick={logout} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-danger hover:bg-danger-soft"><LogOut className="size-4" />Chiqish</button>
         </div>

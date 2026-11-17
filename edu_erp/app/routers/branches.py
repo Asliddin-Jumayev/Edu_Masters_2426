@@ -30,6 +30,12 @@ async def list_branches(db: MyDb, user: AuthUser, name: str | None = None, is_ac
     return (await db.execute(stmt)).scalars().all()
 
 
+@router.get("/public", response_model=list[BranchResponse], summary="Ochiq filiallar ro'yxati")
+async def list_public_branches(db: MyDb):
+    """Bosh sahifada filiallar joylashuvi va telefonlarini ko'rsatish uchun (auth shart emas)."""
+    return (await db.execute(select(Branch).where(Branch.is_active == True).order_by(Branch.name))).scalars().all()
+
+
 @router.get("/{branch_id}", response_model=BranchResponse)
 async def get_branch(branch_id: int, db: MyDb, user: AuthUser):
     ensure_branch(user, branch_id)

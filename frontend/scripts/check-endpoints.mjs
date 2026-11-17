@@ -1,9 +1,10 @@
 // Frontend chaqiradigan har bir API yo'l va metod backend OpenAPI sxemasida borligini tekshiradi.
 // Ishlatish: npm run check:endpoints  (backend o'zgarsa avval: npm run gen:api, openapi.json ni yangilang)
 import { readFileSync, readdirSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const spec = JSON.parse(readFileSync(new URL('../openapi.json', import.meta.url)))
+const spec = JSON.parse(readFileSync(fileURLToPath(new URL('../openapi.json', import.meta.url))))
 const norm = (p) => p.replace(/\{[^}]*\}/g, '{}').replace(/\$\{[^}]*\}/g, '{}')
 const api = new Map(Object.entries(spec.paths).map(([p, ops]) => [norm(p), new Set(Object.keys(ops))]))
 const segs = new Set([...api.keys()].map((p) => p.split('/')[1]))
@@ -12,7 +13,7 @@ function walk(dir) {
   return readdirSync(dir).flatMap((f) => {
     const p = join(dir, f)
     return statSync(p).isDirectory() ? walk(p) : /\.(ts|tsx)$/.test(f) && !f.endsWith('.d.ts') ? [p] : []
-  })
+  });
 }
 const SKIP = new Set(['App.tsx', 'nav.ts'])
 const METHOD = { get: 'get', list: 'get', download: 'get', post: 'post', upload: 'post', put: 'put', patch: 'patch', del: 'delete' }
@@ -21,9 +22,9 @@ const litRe = /(['"`])(\/[a-z][^'"`\n]*)\1/g
 
 const errors = []
 let calls = 0, lits = 0
-for (const file of walk(new URL('../src', import.meta.url).pathname)) {
+for (const file of walk(fileURLToPath(new URL('../src', import.meta.url)))) {
   const src = readFileSync(file, 'utf8')
-  const name = file.split('/').pop()
+  const name = basename(file)
   for (const m of src.matchAll(callRe)) {
     calls++
     const path = norm(m[4].split('?')[0])

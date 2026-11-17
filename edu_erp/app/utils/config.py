@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     DB_NAME: str = "edu_masters"
     DATABASE_URL: str | None = None  # to'liq URL berilsa (masalan testda) shu ishlatiladi
 
-    SECRET_KEY: str = Field(min_length=16)
+    SECRET_KEY: str = Field(default="change-me-to-a-long-random-string-min-32-chars", min_length=16)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_MINUTES: int = 30
     REFRESH_TOKEN_DAYS: int = 1
