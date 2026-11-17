@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Bell, Building2, Globe, LogOut, Menu, Monitor, Moon, ShieldAlert, Sun, UserCircle2, X } from 'lucide-react'
+import { Bell, Building2, ChevronDown, Globe, LogOut, Menu, Monitor, Moon, ShieldAlert, Sun, UserCircle2, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { useGet, useMut } from '@/api/hooks'
 import type { Branch, Me, Notification, Page } from '@/api/types'
@@ -93,31 +93,125 @@ function BranchSwitcher({ me }: { me?: Me }) {
 }
 
 function Sidebar({ me, onNavigate }: { me?: Me; onNavigate?: () => void }) {
+  const location = useLocation()
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = { education: true }
+    for (const g of NAV) {
+      if (g.isCollapsible && g.items.some((it) => location.pathname === it.to || location.pathname.startsWith(it.to + '/'))) {
+        init[g.id] = true
+      }
+    }
+    return init
+  })
+
+  useEffect(() => {
+    for (const g of NAV) {
+      if (g.isCollapsible && g.items.some((it) => location.pathname === it.to || location.pathname.startsWith(it.to + '/'))) {
+        setOpenGroups((prev) => (prev[g.id] ? prev : { ...prev, [g.id]: true }))
+      }
+    }
+  }, [location.pathname])
+
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
   return (
-    <nav aria-label="Asosiy menyu" className="scroll-thin flex h-full flex-col gap-4 overflow-y-auto px-3 py-4">
-      <Link to="/dashboard" onClick={onNavigate} className="mb-1 flex items-center gap-2.5 px-2">
+    <nav aria-label="Asosiy menyu" className="scroll-thin flex h-full flex-col gap-3 overflow-y-auto px-3 py-4">
+      <Link to="/dashboard" onClick={onNavigate} className="mb-2 flex items-center gap-2.5 px-2">
         <span className="grid size-8 place-items-center rounded-lg bg-mark"><span className="block h-3 w-4 border-y-[3px] border-mark-fg" /></span>
         <span className="font-display text-lg font-semibold text-white">Edu Masters</span>
       </Link>
-      {NAV.map((g, i) => {
-        const items = g.items.filter((it) => it.show(me))
-        if (!items.length) return null
-        return (
-          <div key={i}>
-            {g.title && <div className="mb-1 px-2 text-xs font-medium text-side-fg/60">{g.title}</div>}
-            <ul className="space-y-0.5">
-              {items.map((it) => (
-                <li key={it.to}>
-                  <NavLink to={it.to} end={it.end} onClick={onNavigate}
-                    className={({ isActive }) => cn('flex items-center gap-2.5 px-2.5 py-1.5 font-medium transition-colors', isActive ? 'marker' : 'text-side-fg hover:bg-white/10 hover:text-white rounded-md')}>
-                    <it.icon className="size-[18px] shrink-0" aria-hidden />{it.label}
+      <div className="space-y-1.5">
+        {NAV.map((g) => {
+          const items = g.items.filter((it) => it.show(me))
+          if (!items.length) return null
+
+          if (!g.isCollapsible) {
+            return (
+              <div key={g.id}>
+                {items.map((it) => (
+                  <NavLink
+                    key={it.to}
+                    to={it.to}
+                    end={it.end}
+                    onClick={onNavigate}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center gap-2.5 px-2.5 py-2 font-medium rounded-lg transition-colors text-sm',
+                        isActive
+                          ? 'marker font-semibold shadow-sm'
+                          : 'text-side-fg hover:bg-white/10 hover:text-white'
+                      )
+                    }
+                  >
+                    <it.icon className="size-[18px] shrink-0" aria-hidden />
+                    <span>{it.label}</span>
                   </NavLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )
-      })}
+                ))}
+              </div>
+            )
+          }
+
+          const isOpen = !!openGroups[g.id]
+          const isGroupActive = items.some(
+            (it) => location.pathname === it.to || location.pathname.startsWith(it.to + '/')
+          )
+          const GroupIcon = g.icon
+
+          return (
+            <div key={g.id} className="rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleGroup(g.id)}
+                className={cn(
+                  'flex w-full items-center justify-between px-2.5 py-2 text-sm font-medium rounded-lg transition-colors',
+                  isGroupActive
+                    ? 'text-white bg-white/10 font-semibold'
+                    : 'text-side-fg hover:bg-white/5 hover:text-white'
+                )}
+                aria-expanded={isOpen}
+              >
+                <div className="flex items-center gap-2.5">
+                  {GroupIcon && <GroupIcon className="size-[18px] shrink-0 text-side-fg/80" aria-hidden />}
+                  <span>{g.title}</span>
+                </div>
+                <ChevronDown
+                  className={cn(
+                    'size-4 text-side-fg/60 transition-transform duration-200',
+                    isOpen && 'rotate-180 text-side-fg'
+                  )}
+                  aria-hidden
+                />
+              </button>
+
+              {isOpen && (
+                <div className="mt-1 ml-4 space-y-0.5 border-l border-white/15 pl-2 transition-all">
+                  {items.map((it) => (
+                    <NavLink
+                      key={it.to}
+                      to={it.to}
+                      end={it.end}
+                      onClick={onNavigate}
+                      className={({ isActive }) =>
+                        cn(
+                          'flex items-center gap-2.5 px-2.5 py-1.5 font-medium rounded-md text-[13px] transition-colors',
+                          isActive
+                            ? 'marker font-semibold shadow-sm'
+                            : 'text-side-fg/80 hover:bg-white/10 hover:text-white'
+                        )
+                      }
+                    >
+                      <it.icon className="size-4 shrink-0" aria-hidden />
+                      <span>{it.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </nav>
   )
 }

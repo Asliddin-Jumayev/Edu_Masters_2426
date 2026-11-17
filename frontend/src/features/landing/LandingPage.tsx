@@ -13,73 +13,127 @@ import {
   Laptop,
   LogIn,
   MapPin,
-  MessageSquare,
-  Palette,
   Phone,
   Search,
+  ShieldCheck,
   Sparkles,
-  Star,
   Users2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { api, formatError } from '@/api/client'
 import type { Branch, Course } from '@/api/types'
-import { Button, Input, Modal } from '@/components/ui'
-import { fmtMoney } from '@/lib/utils'
+import { Button, Modal } from '@/components/ui'
+import { cn, fmtMoney } from '@/lib/utils'
 
-const DEFAULT_COURSES = [
+function formatPhoneDisplay(digits: string): string {
+  if (!digits) return ''
+  let res = ''
+  if (digits.length > 0) res += '(' + digits.slice(0, 2)
+  if (digits.length >= 2) res += ') ' + digits.slice(2, 5)
+  if (digits.length >= 5) res += '-' + digits.slice(5, 7)
+  if (digits.length >= 7) res += '-' + digits.slice(7, 9)
+  return res
+}
+
+interface DefaultCourse {
+  id: number
+  name: string
+  description: string
+  duration_months: number
+  lessons_count: number
+  price: string
+  category: 'otm' | 'language' | 'it'
+}
+
+const DEFAULT_COURSES: DefaultCourse[] = [
   {
     id: 1,
-    name: 'Full-Stack Python (FastAPI & React)',
-    description: 'Noldan professional darajagacha zamonaviy veb-ilovalar, API va ma’lumotlar bazalarini ishlab chiqish.',
-    duration_months: 8,
-    lessons_count: 96,
-    price: '950000',
-    category: 'it',
+    name: 'Ingliz tili (IELTS 7.5+ & CEFR B2/C1)',
+    description: 'Listening, Reading, Writing va Speaking ko‘nikmalarini chuqur rivojlantirish hamda xalqaro sertifikat kafolati.',
+    duration_months: 6,
+    lessons_count: 72,
+    price: '650000',
+    category: 'language',
   },
   {
     id: 2,
+    name: 'Matematika (DTM va Milliy sertifikat)',
+    description: 'Asosiy va majburiy blok fanlari, murakkab masalalar yechish metodikasi va Milliy sertifikat A+ darajasiga tayyorgarlik.',
+    duration_months: 9,
+    lessons_count: 108,
+    price: '600000',
+    category: 'otm',
+  },
+  {
+    id: 3,
+    name: 'Tarix (O‘zbekiston va Jahon tarixi)',
+    description: 'Xronologik jadvallar, tarixiy manbalar, xaritalar va DTM bazasi testlari bo‘yicha 100% natijadorlik dasturi.',
+    duration_months: 8,
+    lessons_count: 96,
+    price: '550000',
+    category: 'otm',
+  },
+  {
+    id: 4,
+    name: 'Huquqshunoslik (Davlat va huquq asoslari)',
+    description: 'TDYU (Yuridik) va nufuzli huquqshunoslik yo‘nalishlariga kirish uchun ixtisoslashtirilgan mukammal kurs.',
+    duration_months: 8,
+    lessons_count: 96,
+    price: '600000',
+    category: 'otm',
+  },
+  {
+    id: 5,
+    name: 'Fizika (DTM va Olimpiada tayyorgarligi)',
+    description: 'Nazariy qonuniyatlar, formulalarni amaliyotda tushunish va murakkab hisoblash masalalarini oson yechish.',
+    duration_months: 9,
+    lessons_count: 108,
+    price: '600000',
+    category: 'otm',
+  },
+  {
+    id: 6,
+    name: 'Ona tili va adabiyot (Milliy sertifikat)',
+    description: 'Grammatika, matn ustida ishlash, badiiy tahlil va insho yozish bo‘yicha maksimal ball to‘plash texnikalari.',
+    duration_months: 7,
+    lessons_count: 84,
+    price: '550000',
+    category: 'otm',
+  },
+  {
+    id: 7,
+    name: 'Kimyo va Biologiya (Tibbiyot yo‘nalishi)',
+    description: 'Tibbiyot akademiyasi, Farmatsevtika va stomatologiya fakultetlari abituriyentlari uchun chuqurlashtirilgan dastur.',
+    duration_months: 10,
+    lessons_count: 120,
+    price: '650000',
+    category: 'otm',
+  },
+  {
+    id: 8,
     name: 'Frontend Dasturlash (React & TypeScript)',
-    description: 'Zamonaviy interfeyslar, SPA ilovalar, Redux Toolkit, Tailwind va REST API bilan ishlash.',
+    description: 'Zamonaviy veb-ilovalar yaratish: HTML, CSS, Tailwind, JavaScript, React va TypeScript amaliy loyihalari.',
     duration_months: 6,
     lessons_count: 72,
     price: '850000',
     category: 'it',
   },
   {
-    id: 3,
-    name: 'UI/UX & Raqamli Mahsulot Dizayni',
-    description: 'Figma, foydalanuvchi tadqiqotlari (UX research), mobil va veb dizayn hamda prototiplash.',
-    duration_months: 5,
-    lessons_count: 60,
-    price: '800000',
-    category: 'design',
+    id: 9,
+    name: 'Backend Dasturlash (Python & FastAPI)',
+    description: 'Python asoslari, FastAPI framework, PostgreSQL ma’lumotlar bazasi, REST API va Docker bilan ishlash.',
+    duration_months: 7,
+    lessons_count: 84,
+    price: '900000',
+    category: 'it',
   },
   {
-    id: 4,
-    name: 'Grafik Dizayn va Brending',
-    description: 'Photoshop, Illustrator, logotiplar yaratish, brendbuk va ijtimoiy tarmoqlar uchun vizual dizayn.',
-    duration_months: 4,
-    lessons_count: 48,
-    price: '700000',
-    category: 'design',
-  },
-  {
-    id: 5,
-    name: 'IELTS Intensive & Akademik Ingliz tili',
-    description: 'IELTS imtihonidan 7.0+ ball olish uchun tajribali instruktorlar bilan intensiv tayyorgarlik.',
-    duration_months: 3,
-    lessons_count: 36,
-    price: '650000',
-    category: 'language',
-  },
-  {
-    id: 6,
-    name: 'IT Foundation & Algoritmlar',
-    description: 'Kompyuter savodxonligi, mantiqiy fikrlash, algoritmlar va dasturlashga ilk mustahkam qadam.',
-    duration_months: 2,
-    lessons_count: 24,
-    price: '500000',
+    id: 10,
+    name: 'Kiberxavfsizlik va Tarmoq asoslari',
+    description: 'Axborot xavfsizligi asoslari, tarmoq protokollari, zaifliklarni aniqlash (pentesting) va himoya choralari.',
+    duration_months: 6,
+    lessons_count: 72,
+    price: '950000',
     category: 'it',
   },
 ]
@@ -88,32 +142,33 @@ export default function LandingPage() {
   const nav = useNavigate()
   const [courses, setCourses] = useState<Course[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
-  const [loading, setLoading] = useState(false)
-  const [activeCategory, setActiveCategory] = useState<'all' | 'it' | 'design' | 'language'>('all')
+  const [activeCategory, setActiveCategory] = useState<'all' | 'otm' | 'language' | 'it'>('all')
 
   // Lead modal state
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState<number | undefined>(undefined)
   const [formName, setFormName] = useState('')
-  const [formPhone, setFormPhone] = useState('')
+  const [formPhoneDigits, setFormPhoneDigits] = useState('')
   const [formComment, setFormComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Hero quick form
+  const [heroName, setHeroName] = useState('')
+  const [heroPhoneDigits, setHeroPhoneDigits] = useState('')
+  const [heroCourse, setHeroCourse] = useState<number | undefined>(undefined)
+  const [heroSubmitting, setHeroSubmitting] = useState(false)
 
   // Certificate search state
   const [certSerial, setCertSerial] = useState('')
 
   useEffect(() => {
-    // Kurslarni yuklash
     api
       .get<Course[]>('/courses/public')
       .then((data) => {
         if (data && data.length > 0) setCourses(data)
       })
-      .catch(() => {
-        // Fallback agar backend offline bo'lsa
-      })
+      .catch(() => {})
 
-    // Filiallarni yuklash
     api
       .get<Branch[]>('/branches/public')
       .then((data) => {
@@ -124,10 +179,40 @@ export default function LandingPage() {
 
   const displayCourses = courses.length > 0 ? courses : (DEFAULT_COURSES as unknown as Course[])
 
+  const filteredCourses = displayCourses.filter((c) => {
+    if (activeCategory === 'all') return true
+    const courseCat = (c as any).category
+    if (courseCat) return courseCat === activeCategory
+    const n = (c.name || '').toLowerCase()
+    if (activeCategory === 'language') return n.includes('ingliz') || n.includes('ielts') || n.includes('cefr')
+    if (activeCategory === 'it') return n.includes('front') || n.includes('back') || n.includes('kiber') || n.includes('python') || n.includes('dastur')
+    if (activeCategory === 'otm') return !n.includes('front') && !n.includes('back') && !n.includes('kiber') && !n.includes('ielts')
+    return true
+  })
+
+  function handlePhoneDigitsChange(val: string, setter: (s: string) => void) {
+    const raw = val.replace(/\D/g, '')
+    const digits = raw.startsWith('998') ? raw.slice(3) : raw
+    setter(digits.slice(0, 9))
+  }
+
+  function handlePhoneKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (
+      ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].includes(e.key) ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return
+    }
+    if (!/^[0-9]$/.test(e.key)) {
+      e.preventDefault()
+    }
+  }
+
   async function handleLeadSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!formName.trim() || !formPhone.trim()) {
-      toast.error('Ism va telefon raqamingizni kiriting')
+    if (!formName.trim() || formPhoneDigits.length < 9) {
+      toast.error('Iltimos, ismingiz va 9 xonali telefon raqamingizni to‘liq kiriting')
       return
     }
 
@@ -135,20 +220,45 @@ export default function LandingPage() {
     try {
       const res = await api.post<{ msg: string }>('/leads/public', {
         first_name: formName.trim(),
-        phone: formPhone.trim(),
+        phone: `+998${formPhoneDigits}`,
         course_id: selectedCourse || undefined,
         comment: formComment.trim() || undefined,
       })
       toast.success(res?.msg || 'Arizangiz qabul qilindi! Tez orada bog‘lanamiz.')
       setModalOpen(false)
       setFormName('')
-      setFormPhone('')
+      setFormPhoneDigits('')
       setFormComment('')
       setSelectedCourse(undefined)
     } catch (err) {
       toast.error(formatError(err))
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleHeroSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!heroName.trim() || heroPhoneDigits.length < 9) {
+      toast.error('Iltimos, ismingiz va 9 xonali telefon raqamingizni to‘liq kiriting')
+      return
+    }
+
+    setHeroSubmitting(true)
+    try {
+      const res = await api.post<{ msg: string }>('/leads/public', {
+        first_name: heroName.trim(),
+        phone: `+998${heroPhoneDigits}`,
+        course_id: heroCourse || undefined,
+      })
+      toast.success(res?.msg || 'Arizangiz qabul qilindi! Tez orada bog‘lanamiz.')
+      setHeroName('')
+      setHeroPhoneDigits('')
+      setHeroCourse(undefined)
+    } catch (err) {
+      toast.error(formatError(err))
+    } finally {
+      setHeroSubmitting(false)
     }
   }
 
@@ -159,6 +269,15 @@ export default function LandingPage() {
       return
     }
     nav(`/verify/${encodeURIComponent(certSerial.trim())}`)
+  }
+
+  const getCourseIcon = (name: string) => {
+    const n = name.toLowerCase()
+    if (n.includes('ingliz') || n.includes('ielts') || n.includes('cefr')) return <Compass className="size-5" />
+    if (n.includes('kiber') || n.includes('xavfsizlik')) return <ShieldCheck className="size-5" />
+    if (n.includes('front') || n.includes('back') || n.includes('python') || n.includes('dastur')) return <Code2 className="size-5" />
+    if (n.includes('huquq') || n.includes('tarix')) return <Award className="size-5" />
+    return <BookOpen className="size-5" />
   }
 
   return (
@@ -224,17 +343,16 @@ export default function LandingPage() {
           <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-soft px-3.5 py-1.5 text-xs font-semibold text-brand">
-                <Sparkles className="size-3.5" />
-                Zamonaviy kasblar va texnologiyalar akademiyasi
+                <GraduationCap className="size-3.5" />
+                OTM ga kirish imtihonlari va zamonaviy kasblar markazi
               </div>
 
-              <h1 className="mt-5 font-display text-4xl font-bold tracking-tight text-fg sm:text-5xl lg:text-6xl">
-                Kelajak kasblarini eng kuchli <span className="marker">mentorlar bilan</span> o‘rganing
+              <h1 className="mt-5 font-display text-4xl font-bold tracking-tight text-fg sm:text-5xl lg:text-6xl leading-[1.12]">
+                OTM talabasi bo‘ling va <span className="marker">kelajak kasblarini</span> egallang
               </h1>
 
               <p className="mt-6 text-lg leading-relaxed text-muted sm:text-xl">
-                Dasturlash, dizayn va xorijiy tillar yo‘nalishlarida noldan boshlab amaliy loyihalar asosida ta’lim oling.
-                Bitiruvchilarni ishga joylashtirishga faol ko‘maklashamiz.
+                Ingliz tili (IELTS / CEFR), Matematika, Tarix, Huquq, Fizika bo‘yicha DTM va Milliy sertifikatga tayyorgarlik hamda eng talabgir IT dasturlash kurslari.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -242,7 +360,7 @@ export default function LandingPage() {
                   href="#courses"
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-brand px-6 text-base font-semibold text-brand-fg transition hover:opacity-90"
                 >
-                  Kurslarni ko‘rish
+                  Kurslarni tanlash
                   <ChevronRight className="size-4" />
                 </a>
 
@@ -261,66 +379,73 @@ export default function LandingPage() {
               {/* Highlights */}
               <div className="mt-10 grid grid-cols-2 gap-4 border-t border-line/80 pt-8 sm:grid-cols-3">
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="size-5 text-success" />
-                  <span className="text-sm font-medium">Amaliy real loyihalar</span>
+                  <CheckCircle2 className="size-5 text-success shrink-0" />
+                  <span className="text-sm font-medium">DTM & Milliy sertifikat</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="size-5 text-success" />
-                  <span className="text-sm font-medium">Shaxsiy mentor ko‘magi</span>
+                  <CheckCircle2 className="size-5 text-success shrink-0" />
+                  <span className="text-sm font-medium">IELTS 7.5+ kafolatlangan tizim</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="size-5 text-success" />
+                  <CheckCircle2 className="size-5 text-success shrink-0" />
                   <span className="text-sm font-medium">QR-tekshiruvli sertifikat</span>
                 </div>
               </div>
             </div>
 
-            {/* Hero Right Visual Card */}
+            {/* Hero Right Lead Form */}
             <div className="lg:col-span-5">
               <div className="relative rounded-2xl border border-line bg-gradient-to-br from-sunken/60 to-surface p-6 shadow-xl lg:p-8">
                 <div className="flex items-center justify-between border-b border-line pb-4">
                   <div>
-                    <h3 className="font-display text-lg font-semibold">Qabul davom etmoqda</h3>
+                    <h3 className="font-display text-lg font-semibold">Qabul 2026 davom etmoqda</h3>
                     <p className="text-xs text-muted">Yangi guruhlar uchun ro‘yxatdan o‘ting</p>
                   </div>
                   <span className="inline-flex items-center rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
-                    Faol
+                    Ochiq
                   </span>
                 </div>
 
-                <form onSubmit={handleLeadSubmit} className="mt-5 space-y-4">
+                <form onSubmit={handleHeroSubmit} className="mt-5 space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-muted">Ismingiz</label>
+                    <label className="block text-xs font-semibold text-muted">Ismingiz *</label>
                     <input
                       type="text"
                       required
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      placeholder="Masalan: Sardor"
-                      className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
+                      value={heroName}
+                      onChange={(e) => setHeroName(e.target.value)}
+                      placeholder="Masalan: Asliddin"
+                      className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm text-fg placeholder:text-muted focus:border-brand focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-muted">Telefon raqamingiz</label>
-                    <input
-                      type="tel"
-                      required
-                      value={formPhone}
-                      onChange={(e) => setFormPhone(e.target.value)}
-                      placeholder="+998 90 123 45 67"
-                      className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
-                    />
+                    <label className="block text-xs font-semibold text-muted">Telefon raqamingiz *</label>
+                    <div className="mt-1 flex items-center rounded-md border border-line bg-surface focus-within:border-brand focus-within:ring-1 focus-within:ring-brand">
+                      <span className="flex items-center gap-1 border-r border-line bg-sunken/60 px-2.5 py-2 text-xs font-semibold text-fg select-none rounded-l-md">
+                        <span>🇺🇿</span>
+                        <span>+998</span>
+                      </span>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="(90) 123-45-67"
+                        value={formatPhoneDisplay(heroPhoneDigits)}
+                        onChange={(e) => handlePhoneDigitsChange(e.target.value, setHeroPhoneDigits)}
+                        onKeyDown={handlePhoneKeyDown}
+                        className="h-10 w-full rounded-r-md bg-transparent px-3 text-sm text-fg placeholder:text-muted focus:outline-none"
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-muted">Qiziqqan yo‘nalishingiz</label>
                     <select
-                      value={selectedCourse ?? ''}
-                      onChange={(e) => setSelectedCourse(e.target.value ? Number(e.target.value) : undefined)}
-                      className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
+                      value={heroCourse ?? ''}
+                      onChange={(e) => setHeroCourse(e.target.value ? Number(e.target.value) : undefined)}
+                      className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm text-fg focus:border-brand focus:outline-none"
                     >
-                      <option value="">— Kursni tanlang (ixtiyoriy) —</option>
+                      <option value="">— Fan yoki kursni tanlang —</option>
                       {displayCourses.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
@@ -329,11 +454,11 @@ export default function LandingPage() {
                     </select>
                   </div>
 
-                  <Button type="submit" variant="primary" loading={submitting} className="h-11 w-full text-sm font-semibold">
-                    Konsultatsiya uchun yuborish
+                  <Button type="submit" variant="primary" loading={heroSubmitting} className="h-11 w-full text-sm font-semibold">
+                    Ariza qoldirish
                   </Button>
                 </form>
-                <p className="mt-3 text-center text-xs text-muted">Menejerlarimiz 15 daqiqa ichida aloqaga chiqishadi.</p>
+                <p className="mt-3 text-center text-xs text-muted">Menejerlarimiz 15 daqiqa ichida siz bilan bog‘lanishadi.</p>
               </div>
             </div>
           </div>
@@ -345,20 +470,20 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             <div className="rounded-xl border border-line bg-surface p-6 text-center">
-              <span className="font-display text-4xl font-extrabold text-brand">2,500+</span>
-              <p className="mt-2 text-sm font-medium text-muted">Muvaffaqiyatli bitiruvchilar</p>
+              <span className="font-display text-4xl font-extrabold text-success">96%</span>
+              <p className="mt-2 text-sm font-medium text-muted">OTM talabasi bo‘lish ko‘rsatkichi</p>
             </div>
             <div className="rounded-xl border border-line bg-surface p-6 text-center">
-              <span className="font-display text-4xl font-extrabold text-success">92%</span>
-              <p className="mt-2 text-sm font-medium text-muted">Ishga joylashish ko‘rsatkichi</p>
+              <span className="font-display text-4xl font-extrabold text-brand">1,800+</span>
+              <p className="mt-2 text-sm font-medium text-muted">Talabaga aylangan o‘quvchilar</p>
             </div>
             <div className="rounded-xl border border-line bg-surface p-6 text-center">
-              <span className="font-display text-4xl font-extrabold text-brand">20+</span>
-              <p className="mt-2 text-sm font-medium text-muted">Soha mutaxassisi bo‘lgan mentorlar</p>
+              <span className="font-display text-4xl font-extrabold text-brand">85+</span>
+              <p className="mt-2 text-sm font-medium text-muted">IELTS 7.0+ & Milliy sertifikat</p>
             </div>
             <div className="rounded-xl border border-line bg-surface p-6 text-center">
               <span className="font-display text-4xl font-extrabold text-warn">4 ta</span>
-              <p className="mt-2 text-sm font-medium text-muted">Zamonaviy va qulay filiallar</p>
+              <p className="mt-2 text-sm font-medium text-muted">Zamonaviy filiallar</p>
             </div>
           </div>
         </div>
@@ -368,14 +493,44 @@ export default function LandingPage() {
       <section id="courses" className="border-b border-line py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="font-display text-3xl font-bold tracking-tight text-fg sm:text-4xl">Yo‘nalishlar va Kurslar</h2>
-            <p className="mt-3 text-base text-muted sm:text-lg">
-              Mehnat bozorida eng yuqori talabga ega kasblar bo‘yicha sifatli ta’lim oling.
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-soft px-3.5 py-1 text-xs font-semibold text-brand">
+              <Sparkles className="size-3.5" />
+              Mukammal ta’lim dasturlari
+            </div>
+            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-fg sm:text-4xl">
+              Yo‘nalishlar va Kurslar
+            </h2>
+            <p className="mt-3 max-w-2xl mx-auto text-base text-muted sm:text-lg">
+              OTM ga kirish uchun zarur bo‘lgan barcha asosiy fanlar va bozor talabiga mos amaliy IT kurslari.
             </p>
           </div>
 
+          {/* Category Tabs */}
+          <div className="mt-8 flex flex-wrap justify-center gap-2">
+            {[
+              { id: 'all', label: 'Barcha kurslar' },
+              { id: 'otm', label: '🏛️ OTM fanlari (DTM)' },
+              { id: 'language', label: '🇬🇧 Chet tillari (IELTS / CEFR)' },
+              { id: 'it', label: '💻 Zamonaviy IT yo‘nalishlari' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id as any)}
+                className={cn(
+                  'rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition',
+                  activeCategory === cat.id
+                    ? 'bg-brand text-brand-fg shadow-sm'
+                    : 'bg-surface border border-line text-muted hover:text-fg hover:border-brand/40'
+                )}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {displayCourses.map((c) => (
+            {filteredCourses.map((c) => (
               <div
                 key={c.id}
                 className="group flex flex-col justify-between rounded-2xl border border-line bg-surface p-6 transition duration-200 hover:-translate-y-1 hover:border-brand hover:shadow-lg"
@@ -383,13 +538,7 @@ export default function LandingPage() {
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="inline-flex size-11 items-center justify-center rounded-xl bg-brand-soft text-brand">
-                      {c.name.toLowerCase().includes('dizayn') ? (
-                        <Palette className="size-5" />
-                      ) : c.name.toLowerCase().includes('ielts') || c.name.toLowerCase().includes('ingliz') ? (
-                        <Compass className="size-5" />
-                      ) : (
-                        <Code2 className="size-5" />
-                      )}
+                      {getCourseIcon(c.name)}
                     </span>
                     <span className="rounded-full bg-sunken px-2.5 py-1 text-xs font-semibold text-muted">
                       {c.duration_months} oy
@@ -399,7 +548,7 @@ export default function LandingPage() {
                   <h3 className="mt-4 font-display text-xl font-bold text-fg group-hover:text-brand">{c.name}</h3>
 
                   <p className="mt-2 text-sm leading-relaxed text-muted line-clamp-3">
-                    {c.description || 'Zamonaviy metodika, amaliy mashg‘ulotlar va professional portfolio tayyorlash.'}
+                    {c.description || 'DTM standartlari va xalqaro tajriba asosida chuqurlashtirilgan o‘quv kursi.'}
                   </p>
 
                   <div className="mt-4 flex items-center gap-4 text-xs text-muted">
@@ -409,7 +558,7 @@ export default function LandingPage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <BookOpen className="size-3.5" />
-                      Amaliy loyihalar
+                      Haftalik testlar
                     </span>
                   </div>
                 </div>
@@ -445,18 +594,18 @@ export default function LandingPage() {
           <div className="text-center">
             <h2 className="font-display text-3xl font-bold tracking-tight text-fg sm:text-4xl">Nega aynan Edu Masters?</h2>
             <p className="mt-3 text-base text-muted sm:text-lg">
-              Biz faqat dars o‘tib berish bilan cheklanmaymiz — bitiruvchining real natijasiga javobgarmiz.
+              Biz faqat dars o‘tmaymiz — abituriyentning OTM ga kirish natijasi uchun to‘liq javobgarlikni his qilamiz.
             </p>
           </div>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-line bg-surface p-6">
               <div className="grid size-10 place-items-center rounded-lg bg-brand-soft text-brand">
-                <Laptop className="size-5" />
+                <GraduationCap className="size-5" />
               </div>
-              <h3 className="mt-4 font-display text-lg font-semibold text-fg">Amaliy loyihalar</h3>
+              <h3 className="mt-4 font-display text-lg font-semibold text-fg">DTM va Milliy standartlar</h3>
               <p className="mt-2 text-sm text-muted">
-                Faqat quruq nazariya emas, rezyumega qo‘yish uchun real buyurtmalar va jamoaviy startap loyihalar.
+                Barcha mavzular Davlat Test Markazi talablari va Milliy sertifikat darajalari bo‘yicha chuqur tahlil qilinadi.
               </p>
             </div>
 
@@ -464,19 +613,19 @@ export default function LandingPage() {
               <div className="grid size-10 place-items-center rounded-lg bg-success-soft text-success">
                 <Users2 className="size-5" />
               </div>
-              <h3 className="mt-4 font-display text-lg font-semibold text-fg">Mentorlik ko‘magi</h3>
+              <h3 className="mt-4 font-display text-lg font-semibold text-fg">Shaxsiy kurator va mentor</h3>
               <p className="mt-2 text-sm text-muted">
-                Top kompaniyalarda ishlovchi mentorlar darsdan tashqari ham doimiy savollarga javob berib, kodingizni tekshiradi.
+                Har bir o‘quvchining o‘zlashtirishi, davomati va haftalik test natijalari nazorat qilinib, ota-onaga hisobot beriladi.
               </p>
             </div>
 
             <div className="rounded-xl border border-line bg-surface p-6">
               <div className="grid size-10 place-items-center rounded-lg bg-warn-soft text-warn">
-                <Briefcase className="size-5" />
+                <Laptop className="size-5" />
               </div>
-              <h3 className="mt-4 font-display text-lg font-semibold text-fg">Karyera markazi</h3>
+              <h3 className="mt-4 font-display text-lg font-semibold text-fg">Zamonaviy IT laboratoriya</h3>
               <p className="mt-2 text-sm text-muted">
-                Bitiruvchilarga rezyume yozish, mock intervyular o‘tkazish va IT kompaniyalarga tavsiya berish yo‘lga qo‘yilgan.
+                Dasturlash va kiberxavfsizlik darslari kuchli kompyuterlar va amaliy laboratoriya tizimida o‘tkaziladi.
               </p>
             </div>
 
@@ -486,7 +635,7 @@ export default function LandingPage() {
               </div>
               <h3 className="mt-4 font-display text-lg font-semibold text-fg">QR-kodli Sertifikat</h3>
               <p className="mt-2 text-sm text-muted">
-                Kursni muvaffaqiyatli tamomlaganlarga onlayn tekshiriladigan rasmiy bitiruv sertifikati topshiriladi.
+                Kursni tamomlagan o‘quvchilarga onlayn tekshiriladigan rasmiy bitiruv sertifikatlari taqdim etiladi.
               </p>
             </div>
           </div>
@@ -513,7 +662,7 @@ export default function LandingPage() {
               value={certSerial}
               onChange={(e) => setCertSerial(e.target.value)}
               placeholder="Masalan: MAIN-2026-00001"
-              className="h-10 flex-1 rounded-md border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
+              className="h-10 flex-1 rounded-md border border-line bg-surface px-3 text-sm text-fg placeholder:text-muted focus:border-brand focus:outline-none"
             />
             <Button type="submit" variant="primary" className="h-10 px-5">
               <Search className="size-4" />
@@ -535,8 +684,8 @@ export default function LandingPage() {
             {(branches.length > 0
               ? branches
               : [
-                  { id: 1, name: 'Bosh Filial (Chilonzor)', city: 'Toshkent', address: 'Chilonzor tumani, Bunyodkor shox ko‘chasi', phone: '+998 71 200 00 00' },
-                  { id: 2, name: 'Yunusobod Filiali', city: 'Toshkent', address: 'Yunusobod tumani, Amir Temur ko‘chasi', phone: '+998 71 200 11 11' },
+                  { id: 1, name: 'Bosh Filial', city: 'Toshkent', address: 'Toshkent shahri, markaziy filial', phone: '+998 71 200 00 00' },
+                  { id: 2, name: '2-Filial', city: 'Toshkent', address: 'Toshkent shahri, qulay lokatsiya', phone: '+998 71 200 11 11' },
                 ]
             ).map((b) => (
               <div key={b.id} className="rounded-xl border border-line bg-surface p-5">
@@ -587,7 +736,7 @@ export default function LandingPage() {
 
           <div className="mt-6 flex flex-col items-center justify-between gap-4 text-xs sm:flex-row">
             <p>© 2026 Edu Masters. Barcha huquqlar himoyalangan.</p>
-            <p className="text-muted/80">Zamonaviy ta’lim va boshqaruv tizimi.</p>
+            <p className="text-muted/80">Oliy ta’limga tayyorgarlik va boshqaruv tizimi.</p>
           </div>
         </div>
       </footer>
@@ -608,20 +757,27 @@ export default function LandingPage() {
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               placeholder="Ism va familiyangiz"
-              className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
+              className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm text-fg placeholder:text-muted focus:border-brand focus:outline-none"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-muted">Telefon raqamingiz *</label>
-            <input
-              type="tel"
-              required
-              value={formPhone}
-              onChange={(e) => setFormPhone(e.target.value)}
-              placeholder="+998 90 123 45 67"
-              className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
-            />
+            <div className="mt-1 flex items-center rounded-md border border-line bg-surface focus-within:border-brand focus-within:ring-1 focus-within:ring-brand">
+              <span className="flex items-center gap-1 border-r border-line bg-sunken/60 px-2.5 py-2 text-xs font-semibold text-fg select-none rounded-l-md">
+                <span>🇺🇿</span>
+                <span>+998</span>
+              </span>
+              <input
+                type="tel"
+                required
+                placeholder="(90) 123-45-67"
+                value={formatPhoneDisplay(formPhoneDigits)}
+                onChange={(e) => handlePhoneDigitsChange(e.target.value, setFormPhoneDigits)}
+                onKeyDown={handlePhoneKeyDown}
+                className="h-10 w-full rounded-r-md bg-transparent px-3 text-sm text-fg placeholder:text-muted focus:outline-none"
+              />
+            </div>
           </div>
 
           <div>
@@ -629,7 +785,7 @@ export default function LandingPage() {
             <select
               value={selectedCourse ?? ''}
               onChange={(e) => setSelectedCourse(e.target.value ? Number(e.target.value) : undefined)}
-              className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
+              className="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm text-fg focus:border-brand focus:outline-none"
             >
               <option value="">— Kursni tanlang —</option>
               {displayCourses.map((c) => (
@@ -647,7 +803,7 @@ export default function LandingPage() {
               value={formComment}
               onChange={(e) => setFormComment(e.target.value)}
               placeholder="Qo‘shimcha savollaringiz bo‘lsa yozing..."
-              className="mt-1 w-full rounded-md border border-line bg-surface p-3 text-sm focus:border-brand focus:outline-none"
+              className="mt-1 w-full rounded-md border border-line bg-surface p-3 text-sm text-fg placeholder:text-muted focus:border-brand focus:outline-none"
             />
           </div>
 

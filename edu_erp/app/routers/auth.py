@@ -93,9 +93,9 @@ async def login(request: Request, background: BackgroundTasks, db: MyDb, form: O
         phone = form.username
     emp = (await db.execute(select(Employee).where(Employee.phone == phone))).scalar_one_or_none()
     if emp is None or not await verify_password(form.password, emp.password_hash):
-        raise HTTPException(401, "Telefon yoki parol noto'g'ri", headers={"WWW-Authenticate": "Bearer"})
+        raise HTTPException(401, "Login yoki parol noto'g'ri", headers={"WWW-Authenticate": "Bearer"})
     if not is_employee_active(emp):
-        raise HTTPException(403, "Hisob faol emas")
+        raise HTTPException(401, "Login yoki parol noto'g'ri", headers={"WWW-Authenticate": "Bearer"})
     emp_id = emp.id
     await _track_device(db, emp, request, background)
     return _tokens(emp_id)
