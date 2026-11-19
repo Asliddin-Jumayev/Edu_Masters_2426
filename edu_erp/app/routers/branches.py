@@ -11,6 +11,13 @@ from app.utils.permissions import AdminUser, AuthUser, ManagerUser
 router = APIRouter(prefix="/branches", tags=["Branches"])
 
 
+@router.get("/public", response_model=list[BranchResponse])
+async def list_public_branches(db: MyDb):
+    """Asosiy sayt (Landing Page) uchun barcha faol filiallar ro'yxati."""
+    stmt = select(Branch).where(Branch.is_active.is_(True)).order_by(Branch.id)
+    return (await db.execute(stmt)).scalars().all()
+
+
 @router.post("/", response_model=BranchResponse, status_code=201)
 async def create_branch(data: BranchCreate, db: MyDb, user: AdminUser):
     await ensure_unique(db, Branch.code, data.code, msg="Bu kodli filial allaqachon mavjud")

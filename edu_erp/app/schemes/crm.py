@@ -51,6 +51,14 @@ class LeadCreate(BaseModel):
     comment: str | None = None
 
 
+class PublicLeadCreate(BaseModel):
+    branch_id: int | None = None
+    first_name: str = Field(min_length=1, max_length=60)
+    phone: Phone
+    course_name: str | None = None
+    note: str | None = None
+
+
 class LeadUpdate(BaseModel):
     first_name: str | None = Field(None, min_length=1, max_length=60)
     last_name: str | None = Field(None, max_length=60)

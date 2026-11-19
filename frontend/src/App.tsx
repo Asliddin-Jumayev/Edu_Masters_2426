@@ -7,6 +7,7 @@ import { can, hasRole } from '@/lib/permissions'
 import type { Me } from '@/api/types'
 
 const L = (f: () => Promise<{ default: React.ComponentType }>) => lazy(f)
+const Landing = L(() => import('@/features/public/LandingPage'))
 const Login = L(() => import('@/features/auth/LoginPage'))
 const Verify = L(() => import('@/features/misc/VerifyPage'))
 const Dashboard = L(() => import('@/features/dashboard/DashboardPage'))
@@ -46,9 +47,9 @@ function Guard({ allow, children }: { allow: (me?: Me) => boolean; children: Rea
   if (!allow(me)) {
     return (
       <div className="mx-auto max-w-md py-24 text-center">
-        <h1 className="font-display text-3xl font-semibold">Ruxsat yo‘q</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Ruxsat yo‘q</h1>
         <p className="mt-2 text-muted">Bu sahifa sizning rolingiz uchun mo‘ljallanmagan.</p>
-        <Link to="/" className="mt-4 inline-block text-brand underline">Bosh sahifaga qaytish</Link>
+        <Link to="/dashboard" className="mt-4 inline-block text-brand underline font-semibold">Boshqaruv paneliga qaytish</Link>
       </div>
     )
   }
@@ -62,11 +63,22 @@ export default function App() {
   return (
     <Suspense fallback={<div className="grid min-h-screen place-items-center"><Spinner className="size-7" /></div>}>
       <Routes>
+        {/* Asosiy ommaviy sahifa (Landing) — har doim to'g'ridan-to'g'ri ochiladi */}
+        <Route path="/" element={<Landing />} />
+
+        {/* Kirish sahifasi va maxsus yashirin manzillar */}
         <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={<Login />} />
+        <Route path="/admin2426" element={<Login />} />
+        <Route path="/afdmr2426" element={<Login />} />
+
+        {/* Sertifikat tekshirish ommaviy sahifalari */}
         <Route path="/verify" element={<Verify />} />
         <Route path="/verify/:serial" element={<Verify />} />
+
+        {/* Himoyalangan CRM sahifalari (Faqat tizimga kirgan xodimlar uchun) */}
         <Route element={<RequireAuth><AppShell /></RequireAuth>}>
-          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="students" element={<Students />} />
           <Route path="students/:id" element={<StudentDetail />} />
           <Route path="groups" element={<Groups />} />
@@ -90,7 +102,7 @@ export default function App() {
           <Route path="settings/lookups" element={g(can.finance, <Lookups />)} />
           <Route path="settings/integrations" element={g(can.admin, <Integrations />)} />
           <Route path="settings/audit" element={g(can.admin, <Audit />)} />
-          <Route path="*" element={g(any, <div className="py-24 text-center"><h1 className="font-display text-3xl font-semibold">Sahifa topilmadi</h1><Link to="/" className="mt-3 inline-block text-brand underline">Bosh sahifa</Link></div>)} />
+          <Route path="*" element={g(any, <div className="py-24 text-center"><h1 className="font-display text-3xl font-semibold">Sahifa topilmadi</h1><Link to="/dashboard" className="mt-3 inline-block text-brand underline">Bosh sahifa</Link></div>)} />
         </Route>
       </Routes>
     </Suspense>

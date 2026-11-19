@@ -1,6 +1,6 @@
 import datetime as dt
 from decimal import Decimal
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from sqlalchemy import func, select
 from app.models.crm import Lead, LeadSource, LeadStatus
 from app.models.enums import EnrollmentStatus, GroupStatus, PaymentStatus, SessionStatus, StudentStatus
@@ -8,7 +8,10 @@ from app.models.finance import Expense, ExpenseCategory, Payment
 from app.models.groups import Group
 from app.models.lessons import LessonSession
 from app.models.students import Student
+from app.services.excel_export import export_debtors_to_excel
 from app.utils.access import branch_ids_for
+from app.utils.cache import get as cache_get, set as cache_set
+from app.utils.config import settings
 from app.utils.deps import MyDb
 from app.utils.permissions import FinanceUser
 from app.utils.time import month_end, month_start, today
@@ -29,6 +32,11 @@ def _range(date_from, date_to):
 @router.get("/dashboard")
 async def dashboard(db: MyDb, user: FinanceUser, branch_id: int | None = None):
     ids = branch_ids_for(user, branch_id)
+    cache_key = f"reports:dashboard:{user.id}:{branch_id or 'all'}:{sorted(ids) if ids else 'all'}"
+    cached_val = await cache_get(cache_key)
+    if cached_val is not None:
+        return cached_val
+
     m_start, m_end = month_start(today()), month_end(today())
     t0, t1 = dt.datetime.combine(m_start, dt.time.min), dt.datetime.combine(m_end, dt.time.max)
 
@@ -48,7 +56,7 @@ async def dashboard(db: MyDb, user: FinanceUser, branch_id: int | None = None):
     leads_month = await count(Lead, Lead.created_at >= t0, Lead.created_at <= t1, branch_col=Lead.branch_id)
     won_month = await count(Lead, Lead.created_at >= t0, Lead.created_at <= t1, Lead.status_id.in_(won_ids),
                             branch_col=Lead.branch_id)
-    return {
+    data = {
         "period": {"from": m_start, "to": m_end},
         "students_active": await count(Student, Student.status == StudentStatus.ACTIVE, branch_col=Student.branch_id),
         "groups_active": await count(Group, Group.status == GroupStatus.ACTIVE, branch_col=Group.branch_id),
@@ -65,6 +73,8 @@ async def dashboard(db: MyDb, user: FinanceUser, branch_id: int | None = None):
             .where(LessonSession.date == today(), LessonSession.status != SessionStatus.CANCELLED),
             Group.branch_id, ids)) or 0,
     }
+    await cache_set(cache_key, data, ttl=60)
+    return data
 
 
 @router.get("/debtors")
@@ -134,3 +144,23 @@ async def income_expense(db: MyDb, user: FinanceUser, branch_id: int | None = No
     total_exp = sum((r[1] for r in rows), ZERO)
     return {"period": {"from": start, "to": end}, "income": income, "expenses": total_exp,
             "profit": income - total_exp, "expenses_by_category": [{"category": n, "total": t} for n, t in rows]}
+
+
+@router.get("/export/debtors-excel", summary="Qarzdorlar ro'yxatini Excel (.xlsx) formatida yuklash")
+async def export_debtors_excel(db: MyDb, user: FinanceUser, branch_id: int | None = None):
+    """Barcha qarzdor o'quvchilarni formatlangan Excel jadval sifatida yuklaydi."""
+    ids = branch_ids_for(user, branch_id)
+    stmt = _in(select(Student).where(Student.balance < 0), Student.branch_id, ids).order_by(Student.balance)
+    students = (await db.execute(stmt)).scalars().all()
+    debtors = [
+        {"name": f"{s.first_name} {s.last_name}", "phone": s.phone,
+         "parent_phone": s.parent_phone, "debt": -s.balance}
+        for s in students
+    ]
+    excel_bytes = export_debtors_to_excel(debtors, center_name=settings.CENTER_NAME)
+    filename = f"qarzdorlar_{dt.date.today().isoformat()}.xlsx"
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )

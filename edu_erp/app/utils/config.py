@@ -33,6 +33,23 @@ class Settings(BaseSettings):
     TRUST_PROXY: bool = False            # True bo'lsa mijoz IP si X-Forwarded-For dan olinadi (nginx orqasida)
     TIMEZONE_OFFSET_HOURS: int = 5       # xabarlarda ko'rsatiladigan vaqt (Toshkent = UTC+5)
 
+    # --- Redis & Celery ---
+    REDIS_URL: str = ""                  # masalan redis://localhost:6379/0 (bo'sh bo'lsa kesh va WS xotirada ishlaydi)
+    CELERY_BROKER_URL: str = ""          # bo'sh bo'lsa REDIS_URL olinadi
+
+    # --- AI / LLM Integratsiyasi ---
+    AI_PROVIDER: str = "mock"            # mock | gemini | openai
+    GEMINI_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
+    AI_MODEL: str = "gemini-1.5-flash"
+
+    # --- gRPC ---
+    GRPC_PORT: int = 50051
+
+    # --- Telegram Bot ---
+    TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_BOT_USERNAME: str = ""
+
     # --- Click (Shop API) ---
     CLICK_SERVICE_ID: str = ""
     CLICK_MERCHANT_ID: str = ""

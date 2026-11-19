@@ -76,24 +76,24 @@ export function Money({ value, signed, className }: { value?: string | number | 
 /* ---------------- Panel / Header / Stat ---------------- */
 export function Panel({ title, actions, children, className, flush }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
   return (
-    <section className={cn('rounded-lg border border-line bg-surface', className)}>
+    <section className={cn('rounded-2xl border border-line bg-surface shadow-xs transition-all', className)}>
       {(title || actions) && (
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
-          <h2 className="font-display text-[17px] font-semibold">{title}</h2>
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
+          <h2 className="text-base font-bold text-foreground tracking-tight">{title}</h2>
           <div className="flex items-center gap-2">{actions}</div>
         </header>
       )}
-      <div className={flush ? '' : 'p-4'}>{children}</div>
+      <div className={flush ? '' : 'p-5'}>{children}</div>
     </section>
   )
 }
 
 export function PageHeader({ title, subtitle, actions }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="font-display text-[28px] font-semibold leading-tight">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-muted">{subtitle}</p>}
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">{title}</h1>
+        {subtitle && <p className="mt-1 text-xs sm:text-sm text-muted font-medium">{subtitle}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-2">{actions}</div>
     </div>
@@ -102,10 +102,10 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
 
 export function Stat({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: 'danger' | 'success' }) {
   return (
-    <div className="px-4 py-3">
-      <div className="text-[13px] text-muted">{label}</div>
-      <div className={cn('font-display num mt-0.5 text-[26px] font-semibold leading-tight', tone === 'danger' && 'text-danger', tone === 'success' && 'text-success')}>{value}</div>
-      {hint && <div className="mt-0.5 text-xs text-muted">{hint}</div>}
+    <div className="px-5 py-4 transition-colors">
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted">{label}</div>
+      <div className={cn('num mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground', tone === 'danger' && 'text-danger', tone === 'success' && 'text-success')}>{value}</div>
+      {hint && <div className="mt-1 text-xs text-muted font-medium">{hint}</div>}
     </div>
   )
 }

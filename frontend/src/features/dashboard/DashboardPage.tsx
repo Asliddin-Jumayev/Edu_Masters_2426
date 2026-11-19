@@ -9,7 +9,7 @@ import { useAuth, useBranch } from '@/lib/auth'
 import { useNames } from '@/lib/hooks'
 import { PRIORITY, SESSION_STATUS } from '@/lib/labels'
 import { can } from '@/lib/permissions'
-import { fmtDT, fmtMoney, fmtTime, today } from '@/lib/utils'
+import { cn, fmtDT, fmtMoney, fmtTime, today } from '@/lib/utils'
 
 const tip = { contentStyle: { background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 8, color: 'var(--fg)' }, cursor: { fill: 'var(--sunken)' } }
 
@@ -21,7 +21,9 @@ function FinanceSection({ branchId }: { branchId: number | null }) {
   const debt = useGet<Debtor[]>('/reports/debtors', { ...p, limit: 8 })
   const x = d.data
   const cats = (ie.data?.expenses_by_category ?? []).map((c) => ({ name: c.category, value: Number(c.total) }))
-  const stages = (fun.data?.stages ?? []).map((s) => ({ ...s, fill: s.is_won ? 'var(--success)' : s.is_lost ? 'var(--danger)' : 'var(--brand)' }))
+  const totalExpenses = cats.reduce((acc, c) => acc + (Number(c.value) || 0), 0)
+  const stages = (fun.data?.stages ?? []).map((s) => ({ ...s, count: Number(s.count) || 0 }))
+  const totalLeads = stages.reduce((acc, s) => acc + s.count, 0)
   return (
     <>
       <Panel flush className="overflow-hidden">
@@ -37,22 +39,60 @@ function FinanceSection({ branchId }: { branchId: number | null }) {
         )}
       </Panel>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Panel title="Lid voronkasi" actions={x && <Badge tone="brand">Konversiya {x.lead_conversion_percent}%</Badge>}>
-          {stages.length === 0 ? <EmptyState title="Bu oyda lid yo‘q" /> : (
-            <div className="h-64" role="img" aria-label="Lid bosqichlari bo‘yicha diagramma">
-              <ResponsiveContainer><BarChart data={stages} layout="vertical" margin={{ left: 8, right: 16 }}>
-                <XAxis type="number" allowDecimals={false} stroke="var(--muted)" fontSize={12} />
-                <YAxis type="category" dataKey="name" width={130} stroke="var(--muted)" fontSize={12} />
-                <Tooltip {...tip} formatter={(v) => [v, 'Lidlar']} />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>{stages.map((s) => <Cell key={s.status_id} fill={s.fill} />)}</Bar>
-              </BarChart></ResponsiveContainer>
+        <Panel 
+          title="Lid voronkasi" 
+          actions={
+            x && (
+              <div className="flex items-center gap-2">
+                <Badge tone="brand">Konversiya {x.lead_conversion_percent}%</Badge>
+                {totalLeads > 0 && <span className="text-xs text-muted">Jami: {totalLeads} ta</span>}
+              </div>
+            )
+          }
+        >
+          {totalLeads === 0 ? (
+            <EmptyState title="Bu oyda lid yo‘q" hint="Hozircha yangi lidlar mavjud emas." />
+          ) : (
+            <div className="space-y-3 py-1">
+              {stages.map((s) => {
+                const pct = totalLeads > 0 ? Math.round((s.count / totalLeads) * 100) : 0
+                return (
+                  <div key={s.status_id} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-medium">
+                      <span className="flex items-center gap-2">
+                        <span className={cn(
+                          "size-2 rounded-full",
+                          s.is_won ? "bg-emerald-500" : s.is_lost ? "bg-rose-500" : "bg-indigo-500"
+                        )} />
+                        <span className="text-foreground">{s.name}</span>
+                      </span>
+                      <span className="text-muted">
+                        <b className="text-foreground">{s.count}</b> ta ({pct}%)
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-sunken">
+                      <div 
+                        className={cn(
+                          "h-full rounded-full transition-all duration-500",
+                          s.is_won 
+                            ? "bg-gradient-to-r from-emerald-500 to-teal-500" 
+                            : s.is_lost 
+                            ? "bg-gradient-to-r from-rose-500 to-red-500" 
+                            : "bg-gradient-to-r from-indigo-500 to-blue-500"
+                        )} 
+                        style={{ width: `${Math.max(pct, s.count > 0 ? 5 : 0)}%` }} 
+                      />
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </Panel>
         <Panel title="Xarajatlar (kategoriya bo‘yicha)" actions={ie.data && <span className="text-[13px] text-muted">Foyda: <Money value={ie.data.profit} signed /></span>}>
-          {cats.length === 0 ? <EmptyState title="Bu oyda xarajat yo‘q" /> : (
+          {totalExpenses === 0 ? <EmptyState title="Bu oyda xarajat yo‘q" hint="Ushbu oy bo‘yicha xarajatlar kiritilmagan." /> : (
             <div className="h-64" role="img" aria-label="Xarajatlar diagrammasi">
-              <ResponsiveContainer><BarChart data={cats} layout="vertical" margin={{ left: 8, right: 16 }}>
+              <ResponsiveContainer><BarChart data={cats.filter((c) => c.value > 0)} layout="vertical" margin={{ left: 8, right: 16 }}>
                 <XAxis type="number" stroke="var(--muted)" fontSize={12} tickFormatter={(v: number) => `${Math.round(v / 1000)}k`} />
                 <YAxis type="category" dataKey="name" width={110} stroke="var(--muted)" fontSize={12} />
                 <Tooltip {...tip} formatter={(v) => [fmtMoney(Number(v)), 'Summa']} />

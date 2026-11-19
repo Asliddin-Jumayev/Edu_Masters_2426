@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package edu_erp;
+
+// O'quvchi ma'lumotlari bo'yicha gRPC xizmati
+service StudentGrpcService {
+    // ID bo'yicha o'quvchi statusi va balansini olish (masalan turniket yoki billing tizimi uchun)
+    rpc GetStudentInfo (StudentInfoRequest) returns (StudentInfoResponse);
+
+    // Telefon bo'yicha o'quvchini qidirish
+    rpc LookupByPhone (PhoneLookupRequest) returns (StudentInfoResponse);
+}
+
+message StudentInfoRequest {
+    int64 student_id = 1;
+}
+
+message PhoneLookupRequest {
+    string phone = 1;
+}
+
+message StudentInfoResponse {
+    int64 student_id = 1;
+    string full_name = 2;
+    string phone = 3;
+    string status = 4;
+    double balance = 5;
+    bool is_active = 6;
+    bool has_debt = 7;
+}

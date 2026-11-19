@@ -48,12 +48,12 @@ async def _track_device(db, emp: Employee, request: Request, background: Backgro
         )
         is_new_device = old_dev_id is None
 
-        # 2. Qurilmani bazaga yozamiz
+        # 2. Qurilmani bazaga yozamiz (record_login alert=True qaytaradi agar avval boshqa qurilma bo'lgan bo'lsa yoki NEW_DEVICE_ALERT_ON_FIRST_LOGIN bo'lsa)
         dev, alert = await record_login(db, emp, request)
         label = dev.label or ua_label
         ip = dev.last_ip or client_ip(request) or "127.0.0.1"
 
-        if is_new_device or alert:
+        if alert:
             notify(db, eid, "security", "Yangi qurilmadan kirildi", f"{label} · IP {ip}")
             add_audit(db, emp, "login_new_device", "employee", eid, new={"device": label, "ip": ip})
         await db.commit()
@@ -62,8 +62,8 @@ async def _track_device(db, emp: Employee, request: Request, background: Backgro
         log.exception("Qurilmani qayd etib bo'lmadi (login davom etadi)")
         return
 
-    # 3. Agar qurilma yangi bo'lsa va foydalanuvchida email bo'lsa -> Xuddi test-email kabi darhol yuboramiz!
-    if (is_new_device or alert) and user_email:
+    # 3. Agar yangi qurilma bo'lsa va alert talab qilinsa, foydalanuvchida email bo'lsa -> Gmail yuboramiz
+    if alert and user_email:
         when = (utcnow() + timedelta(hours=settings.TIMEZONE_OFFSET_HOURS)).strftime("%d.%m.%Y %H:%M") + f" (UTC+{settings.TIMEZONE_OFFSET_HOURS})"
         subject, text, html = mail.new_device_message(
             name=name,

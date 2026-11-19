@@ -10,7 +10,7 @@ from app.models.students import Student
 from app.schemes.common import Message
 from app.schemes.crm import (ActivityCreate, ActivityResponse, LeadConvert, LeadCreate, LeadResponse, LeadSourceIn,
                              LeadSourceResponse, LeadStatusChange, LeadStatusIn, LeadStatusResponse, LeadUpdate,
-                             TaskCreate, TaskResponse, TaskUpdate, TrialCreate, TrialResponse, TrialResult)
+                             PublicLeadCreate, TaskCreate, TaskResponse, TaskUpdate, TrialCreate, TrialResponse, TrialResult)
 from app.schemes.students import StudentResponse
 from app.services.enrollment import enroll_student
 from app.services.messaging import notify
@@ -110,6 +110,60 @@ async def _check_assignee(db, emp_id: int):
     emp = await db.get(Employee, emp_id)
     if emp is None or not emp.is_active:
         raise HTTPException(400, "Mas'ul xodim topilmadi yoki faol emas")
+
+
+@router.post("/public", status_code=201)
+async def create_public_lead(data: PublicLeadCreate, db: MyDb):
+    """Asosiy saytdan (Landing Page) mehmonlar qoldirgan arizani qabul qilish."""
+    branch_id = data.branch_id
+    if branch_id:
+        branch = await db.get(Branch, branch_id)
+        if not branch or not branch.is_active:
+            branch_id = None
+    if not branch_id:
+        branch = await db.scalar(select(Branch).where(Branch.is_active.is_(True)).order_by(Branch.id).limit(1))
+        branch_id = branch.id if branch else 1
+
+    first_status = await db.scalar(
+        select(LeadStatus).where(LeadStatus.is_won.is_(False), LeadStatus.is_lost.is_(False))
+        .order_by(LeadStatus.position, LeadStatus.id).limit(1)
+    )
+    status_id = first_status.id if first_status else 1
+
+    source = await db.scalar(select(LeadSource).where(LeadSource.name.ilike("%Sayt%")).limit(1))
+    source_id = source.id if source else None
+
+    course_id = None
+    if data.course_name:
+        crs = await db.scalar(select(Course).where(Course.name.ilike(f"%{data.course_name[:20]}%")).limit(1))
+        if crs:
+            course_id = crs.id
+
+    comment_parts = []
+    if data.course_name:
+        comment_parts.append(f"Tanlangan OTM kursi: {data.course_name}")
+    if data.note:
+        comment_parts.append(data.note)
+    comment = "\n".join(comment_parts) if comment_parts else "Sayt orqali kelgan online ariza"
+
+    existing = await db.scalar(select(Lead).where(Lead.branch_id == branch_id, Lead.phone == data.phone))
+    if existing:
+        existing.comment = (existing.comment or "") + f"\n[Qayta ariza]: {comment}"
+        await safe_commit(db)
+        return {"ok": True, "lead_id": existing.id, "message": "Arizangiz muvaffaqiyatli qabul qilindi"}
+
+    lead = Lead(
+        branch_id=branch_id,
+        first_name=data.first_name.strip(),
+        phone=data.phone,
+        source_id=source_id,
+        status_id=status_id,
+        course_id=course_id,
+        comment=comment
+    )
+    db.add(lead)
+    await safe_commit(db)
+    return {"ok": True, "lead_id": lead.id, "message": "Arizangiz muvaffaqiyatli qabul qilindi"}
 
 
 @router.post("/", response_model=LeadResponse, status_code=201)

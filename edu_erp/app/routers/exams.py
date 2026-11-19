@@ -192,7 +192,7 @@ async def issue(data: CertificateIssue, db: MyDb, user: ManagerUser):
 
 
 @cert_router.get("/", response_model=Page[CertificateResponse])
-async def list_certs(db: MyDb, user: AuthUser, params: Pagination, student_id: int | None = None,
+async def list_certs(db: MyDb, user: ManagerUser, params: Pagination, student_id: int | None = None,
                      group_id: int | None = None):
     stmt = scoped(select(Certificate).join(Group, Group.id == Certificate.group_id), Group.branch_id, user)
     stmt = stmt.order_by(Certificate.id.desc())

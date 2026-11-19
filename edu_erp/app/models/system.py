@@ -44,3 +44,12 @@ class LoginDevice(Base):
     last_seen_at: Mapped[dt.datetime] = mapped_column(DateTime, default=utcnow)
     login_count: Mapped[int] = mapped_column(default=1)
     alerted: Mapped[bool] = mapped_column(Boolean, default=False)  # xabarnoma yuborilganmi
+
+
+class Employee2FA(CreatedAtMixin, Base):
+    """Xodimning ikki bosqichli autentifikatsiya (TOTP / Google Authenticator) ma'lumotlari."""
+    __tablename__ = "employee_2fa"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    employee_id: Mapped[int] = mapped_column(ForeignKey("employees.id"), unique=True, index=True)
+    secret: Mapped[str] = mapped_column(String(64))
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
