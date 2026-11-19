@@ -70,19 +70,19 @@ export default function EmployeesPage() {
           { name: 'role', label: 'Rol', type: 'select', emptyLabel: 'Barcha rollar', options: [{ value: 'teacher', label: 'O‘qituvchi' }, { value: 'manager', label: 'Menejer' }, { value: 'accountant', label: 'Buxgalter' }, { value: 'admin', label: 'Administrator' }] },
         ]}
         columns={[
-          { key: 'n', header: 'Xodim', cell: (e) => <div><div className="font-medium">{fullName(e)}</div><div className="text-xs text-muted">{e.position}</div></div> },
-          { key: 'p', header: 'Telefon', cell: (e) => e.phone },
-          { key: 'h', header: 'Ishga kirgan', cell: (e) => fmtDate(e.hired_at) },
+          { key: 'n', header: 'Xodim', cell: (e) => <div><div className="font-semibold text-slate-900 dark:text-slate-100">{fullName(e)}</div><div className="text-xs text-slate-500 dark:text-slate-400">{e.position}</div></div> },
+          { key: 'p', header: 'Telefon', cell: (e) => <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{e.phone}</span> },
+          { key: 'h', header: 'Ishga kirgan', cell: (e) => <span className="text-slate-600 dark:text-slate-400 text-xs">{fmtDate(e.hired_at)}</span> },
           { key: 's', header: 'Holat', cell: (e) => (e.is_active ? <Badge tone="success">Ishlayapti</Badge> : <Badge tone="neutral">Bo‘shatilgan {fmtDate(e.fired_at)}</Badge>) },
         ]}
         rowActions={(e) => (
-          <>
-            <Button variant="ghost" size="sm" title="Rollar" aria-label="Rollar" onClick={() => setRolesFor(e)}><ShieldPlus className="size-4" /></Button>
-            {can.admin(me) && <Button variant="ghost" size="sm" title="Parolni tiklash" aria-label="Parolni tiklash" onClick={() => setPwFor(e)}><KeyRound className="size-4" /></Button>}
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" title="Rollar" aria-label="Rollar" onClick={() => setRolesFor(e)} className="hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 rounded-lg p-1.5 h-8 w-8"><ShieldPlus className="size-4" /></Button>
+            {can.admin(me) && <Button variant="ghost" size="sm" title="Parolni tiklash" aria-label="Parolni tiklash" onClick={() => setPwFor(e)} className="hover:bg-amber-50 dark:hover:bg-amber-950/60 hover:text-amber-600 rounded-lg p-1.5 h-8 w-8"><KeyRound className="size-4" /></Button>}
             {e.is_active
-              ? <Button variant="ghost" size="sm" title="Ishdan bo‘shatish" aria-label="Ishdan bo‘shatish" onClick={() => setFireFor(e)}><UserMinus className="size-4 text-danger" /></Button>
-              : <Button variant="ghost" size="sm" title="Qayta faollashtirish" aria-label="Qayta faollashtirish" onClick={() => react.mutate(e.id)}><UserCheck className="size-4 text-success" /></Button>}
-          </>
+              ? <Button variant="ghost" size="sm" title="Ishdan bo‘shatish" aria-label="Ishdan bo‘shatish" onClick={() => setFireFor(e)} className="hover:bg-rose-50 dark:hover:bg-rose-950/60 text-rose-500 hover:text-rose-600 rounded-lg p-1.5 h-8 w-8"><UserMinus className="size-4" /></Button>
+              : <Button variant="ghost" size="sm" title="Qayta faollashtirish" aria-label="Qayta faollashtirish" onClick={() => react.mutate(e.id)} className="hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-emerald-600 rounded-lg p-1.5 h-8 w-8"><UserCheck className="size-4" /></Button>}
+          </div>
         )}
         modalSize="lg"
         fields={[

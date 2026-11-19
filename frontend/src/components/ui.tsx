@@ -6,17 +6,17 @@ import type { LabelMap, Tone } from '@/lib/labels'
 /* ---------------- Button ---------------- */
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'mark'
 const variants: Record<Variant, string> = {
-  primary: 'bg-brand text-brand-fg hover:opacity-90',
-  secondary: 'bg-surface text-fg border border-line hover:bg-sunken',
-  ghost: 'text-fg hover:bg-sunken',
-  danger: 'bg-danger text-white hover:opacity-90',
+  primary: 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-semibold shadow-xs shadow-indigo-600/20 active:scale-[0.98]',
+  secondary: 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/90 dark:border-slate-700/80 hover:bg-slate-50 dark:hover:bg-slate-750 shadow-2xs font-medium',
+  ghost: 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white',
+  danger: 'bg-rose-600 text-white hover:bg-rose-500 shadow-xs font-semibold',
   mark: 'marker font-semibold hover:brightness-95',
 }
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> { variant?: Variant; size?: 'sm' | 'md'; loading?: boolean }
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 'secondary', size = 'md', loading, className, children, disabled, type = 'button', ...p }, ref) => (
   <button ref={ref} type={type} disabled={disabled || loading}
-    className={cn('inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-      size === 'sm' ? 'h-8 px-2.5 text-[13px]' : 'h-9 px-3.5', variants[variant], className)} {...p}>
+    className={cn('inline-flex items-center justify-center gap-1.5 rounded-xl font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer',
+      size === 'sm' ? 'h-8 px-3 text-xs' : 'h-9 px-3.5 text-sm', variants[variant], className)} {...p}>
     {loading && <Loader2 className="size-4 animate-spin" aria-hidden />}
     {children}
   </button>
@@ -24,7 +24,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 's
 Button.displayName = 'Button'
 
 /* ---------------- Inputs ---------------- */
-const inputCls = 'w-full rounded-md border border-line bg-surface px-3 py-2 text-fg placeholder:text-muted/70 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:bg-sunken disabled:text-muted'
+const inputCls = 'w-full rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-900 px-3 py-2 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400 text-sm transition-all shadow-2xs'
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(({ className, ...p }, ref) => (
   <input ref={ref} className={cn(inputCls, 'h-9 py-0', className)} {...p} />
 ))
@@ -34,28 +34,39 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
 ))
 Textarea.displayName = 'Textarea'
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(({ className, children, ...p }, ref) => (
-  <select ref={ref} className={cn(inputCls, 'h-9 py-0 pr-8', className)} {...p}>{children}</select>
+  <select ref={ref} className={cn(inputCls, 'h-9 py-0 pr-8 cursor-pointer', className)} {...p}>{children}</select>
 ))
 Select.displayName = 'Select'
 
 export function Field({ label, error, hint, children, className, required }: { label?: ReactNode; error?: string; hint?: ReactNode; children: ReactNode; className?: string; required?: boolean }) {
   return (
     <label className={cn('block', className)}>
-      {label && <span className="mb-1 block text-[13px] font-medium">{label}{required && <span className="ml-0.5 text-danger">*</span>}</span>}
+      {label && <span className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">{label}{required && <span className="ml-0.5 text-rose-500">*</span>}</span>}
       {children}
-      {hint && !error && <span className="mt-1 block text-xs text-muted">{hint}</span>}
-      {error && <span role="alert" className="mt-1 block text-xs text-danger">{error}</span>}
+      {hint && !error && <span className="mt-1 block text-[11px] text-slate-500 dark:text-slate-400">{hint}</span>}
+      {error && <span role="alert" className="mt-1 block text-xs text-rose-500 font-medium">{error}</span>}
     </label>
   )
 }
 
 /* ---------------- Badge ---------------- */
 const tones: Record<Tone, string> = {
-  neutral: 'bg-sunken text-muted', brand: 'bg-brand-soft text-brand', success: 'bg-success-soft text-success',
-  warn: 'bg-warn-soft text-warn', danger: 'bg-danger-soft text-danger', info: 'bg-brand-soft text-brand',
+  neutral: 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+  brand: 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60',
+  success: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60',
+  warn: 'bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60',
+  danger: 'bg-rose-50 text-rose-700 border border-rose-200/80 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60',
+  info: 'bg-sky-50 text-sky-700 border border-sky-200/80 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/60',
 }
 export function Badge({ tone = 'neutral', children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
-  return <span className={cn('inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium', tones[tone], className)}>{children}</span>
+  return (
+    <span className={cn('inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold', tones[tone], className)}>
+      {tone === 'success' && <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />}
+      {tone === 'danger' && <span className="size-1.5 rounded-full bg-rose-500 shrink-0" />}
+      {tone === 'warn' && <span className="size-1.5 rounded-full bg-amber-500 shrink-0" />}
+      {children}
+    </span>
+  )
 }
 export function StatusBadge({ map, value }: { map: LabelMap; value?: string | null }) {
   if (!value) return <span className="text-muted">—</span>
@@ -76,10 +87,10 @@ export function Money({ value, signed, className }: { value?: string | number | 
 /* ---------------- Panel / Header / Stat ---------------- */
 export function Panel({ title, actions, children, className, flush }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
   return (
-    <section className={cn('rounded-2xl border border-line bg-surface shadow-xs transition-all', className)}>
+    <section className={cn('rounded-2xl border border-slate-200/90 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-xs shadow-slate-200/50 dark:shadow-none transition-all', className)}>
       {(title || actions) && (
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3.5">
-          <h2 className="text-base font-bold text-foreground tracking-tight">{title}</h2>
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 px-5 py-4">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">{title}</h2>
           <div className="flex items-center gap-2">{actions}</div>
         </header>
       )}
@@ -92,8 +103,8 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">{title}</h1>
-        {subtitle && <p className="mt-1 text-xs sm:text-sm text-muted font-medium">{subtitle}</p>}
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">{title}</h1>
+        {subtitle && <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">{subtitle}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-2">{actions}</div>
     </div>
@@ -202,21 +213,21 @@ export function DataTable<T>({ columns, rows, loading, onRowClick, rowKey, empty
     <div className="scroll-thin overflow-x-auto">
       <table className="w-full border-collapse text-left">
         <thead>
-          <tr className="border-b border-line bg-sunken/70 text-[13px] text-muted">
+          <tr className="border-b border-slate-200/90 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/60 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             {columns.map((c) => (
-              <th key={c.key} scope="col" className={cn('whitespace-nowrap px-4 py-2.5 font-medium', c.align === 'right' && 'text-right', c.align === 'center' && 'text-center', c.className)}>{c.header}</th>
+              <th key={c.key} scope="col" className={cn('whitespace-nowrap px-4 py-3 font-semibold', c.align === 'right' && 'text-right', c.align === 'center' && 'text-center', c.className)}>{c.header}</th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
           {loading && rows.length === 0 && Array.from({ length: 5 }).map((_, i) => (
-            <tr key={i} className="border-b border-line/70">{columns.map((c) => <td key={c.key} className="px-4 py-3"><div className="h-4 w-3/4 animate-pulse rounded bg-sunken" /></td>)}</tr>
+            <tr key={i} className="border-b border-slate-100 dark:border-slate-800/60">{columns.map((c) => <td key={c.key} className="px-4 py-3.5"><div className="h-4 w-3/4 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" /></td>)}</tr>
           ))}
           {rows.map((r) => (
             <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined}
-              className={cn('border-b border-line/70 last:border-0', onRowClick && 'cursor-pointer hover:bg-sunken/60')}>
+              className={cn('transition-colors', onRowClick ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-800/50' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30')}>
               {columns.map((c) => (
-                <td key={c.key} className={cn('px-4 py-2.5 align-middle', c.align === 'right' && 'text-right', c.align === 'center' && 'text-center', c.className)}>{c.cell(r)}</td>
+                <td key={c.key} className={cn('px-4 py-3 align-middle text-sm text-slate-700 dark:text-slate-300', c.align === 'right' && 'text-right', c.align === 'center' && 'text-center', c.className)}>{c.cell(r)}</td>
               ))}
             </tr>
           ))}
@@ -242,5 +253,5 @@ export function Pager({ total, limit, offset, onChange }: { total: number; limit
 }
 
 export function Toolbar({ children }: { children: ReactNode }) {
-  return <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">{children}</div>
+  return <div className="flex flex-wrap items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 px-4 py-3 bg-slate-50/50 dark:bg-slate-900/50">{children}</div>
 }

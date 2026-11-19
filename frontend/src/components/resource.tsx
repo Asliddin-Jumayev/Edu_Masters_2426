@@ -229,10 +229,10 @@ export function ResourcePage<T extends { id: number }>(cfg: ResourceConfig<T>) {
   const columns: Column<T>[] = showActions ? [...cfg.columns, {
     key: '_actions', header: '', align: 'right', className: 'w-px',
     cell: (r) => (
-      <div className="flex justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
         {cfg.rowActions?.(r)}
-        {canEdit(r) && <Button variant="ghost" size="sm" aria-label="Tahrirlash" onClick={() => setForm({ mode: 'edit', row: r })}><Pencil className="size-4" /></Button>}
-        {canDelete(r) && <Button variant="ghost" size="sm" aria-label={cfg.deleteLabel ?? "O'chirish"} onClick={() => setDel(r)}><Trash2 className="size-4 text-danger" /></Button>}
+        {canEdit(r) && <Button variant="ghost" size="sm" aria-label="Tahrirlash" title="Tahrirlash" onClick={() => setForm({ mode: 'edit', row: r })} className="hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 rounded-lg p-1.5 h-8 w-8"><Pencil className="size-4" /></Button>}
+        {canDelete(r) && <Button variant="ghost" size="sm" aria-label={cfg.deleteLabel ?? "O'chirish"} title={cfg.deleteLabel ?? "O'chirish"} onClick={() => setDel(r)} className="hover:bg-rose-50 dark:hover:bg-rose-950/60 text-rose-500 hover:text-rose-600 rounded-lg p-1.5 h-8 w-8"><Trash2 className="size-4" /></Button>}
       </div>
     ),
   }] : cfg.columns

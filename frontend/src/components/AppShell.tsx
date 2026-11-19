@@ -145,36 +145,22 @@ function Sidebar({ me, onNavigate }: { me?: Me; onNavigate?: () => void }) {
   }
 
   return (
-    <nav aria-label="Asosiy menyu" className="scroll-thin flex h-full flex-col gap-2 overflow-y-auto px-3.5 py-4 font-sans bg-slate-950 text-slate-100 border-r border-slate-800/80">
+    <nav aria-label="Asosiy menyu" className="scroll-thin flex h-full flex-col gap-2 overflow-y-auto px-3.5 py-4 font-sans bg-slate-50/90 dark:bg-slate-950 text-slate-800 dark:text-slate-100 border-r border-slate-200/80 dark:border-slate-800/80 transition-colors">
       
       {/* Brand Header */}
-      <Link to="/dashboard" onClick={onNavigate} className="mb-2 flex items-center gap-3 px-2 py-1.5 group">
-        <div className="size-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/30 group-hover:scale-105 transition-transform">
+      <Link to="/dashboard" onClick={onNavigate} className="mb-3 flex items-center gap-3 px-2 py-1.5 group rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-900/60 transition-colors">
+        <div className="size-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/25 group-hover:scale-105 transition-transform">
           <GraduationCap className="size-6 stroke-[2.2]" />
         </div>
         <div>
-          <span className="font-display text-base font-bold tracking-tight text-white flex items-center gap-1.5">
+          <span className="font-display text-base font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
             Edu Masters
-            <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
           </span>
-          <span className="block text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+          <span className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
             CRM Tizimi
           </span>
         </div>
-      </Link>
-
-      {/* Asosiy saytga o'tish tugmasi */}
-      <Link
-        to="/"
-        onClick={onNavigate}
-        className="mb-3 flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 shadow-lg shadow-indigo-600/25 border border-indigo-400/30 transition-all group select-none active:scale-[0.98]"
-        title="Ommaviy asosiy saytni ko'rish (Landing page)"
-      >
-        <div className="flex items-center gap-2.5">
-          <Globe className="size-4 text-white group-hover:rotate-45 transition-transform duration-300" />
-          <span>Asosiy saytga qaytish</span>
-        </div>
-        <ArrowUpRight className="size-3.5 text-indigo-200 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
       </Link>
 
       {/* Menyu guruhlari va oqib chiquvchi (accordion) ro'yxat */}
@@ -194,10 +180,10 @@ function Sidebar({ me, onNavigate }: { me?: Me; onNavigate?: () => void }) {
                     end={it.end}
                     onClick={onNavigate}
                     className={({ isActive }) => cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all',
+                      'flex items-center gap-3 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all',
                       isActive 
-                        ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/25 font-semibold' 
-                        : 'text-slate-300 hover:text-white hover:bg-slate-900/80'
+                        ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-xs font-semibold' 
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-900/70'
                     )}
                   >
                     <it.icon className="size-[18px] shrink-0" />
@@ -220,27 +206,27 @@ function Sidebar({ me, onNavigate }: { me?: Me; onNavigate?: () => void }) {
                 type="button"
                 onClick={() => g.id && toggleGroup(g.id)}
                 className={cn(
-                  'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all group select-none',
+                  'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all group select-none cursor-pointer',
                   isGroupActive
-                    ? 'text-indigo-400 bg-indigo-500/10'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                    ? 'text-indigo-700 dark:text-indigo-300 font-semibold bg-indigo-50/80 dark:bg-indigo-950/40'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-900/50'
                 )}
               >
                 <div className="flex items-center gap-2.5">
-                  {GroupIcon && <GroupIcon className="size-[17px] shrink-0 text-slate-400 group-hover:text-indigo-400 transition-colors" />}
+                  {GroupIcon && <GroupIcon className="size-[17px] shrink-0 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />}
                   <span>{g.title}</span>
                 </div>
                 <ChevronDown 
                   className={cn(
-                    'size-4 text-slate-500 transition-transform duration-200 group-hover:text-slate-300',
-                    isOpen && 'rotate-180 text-indigo-400'
+                    'size-4 text-slate-400 transition-transform duration-200 group-hover:text-slate-600 dark:group-hover:text-slate-300',
+                    isOpen && 'rotate-180 text-indigo-600 dark:text-indigo-400'
                   )} 
                 />
               </button>
 
               {/* Oqib chiquvchi ichki havolalar */}
               {isOpen && (
-                <ul className="border-l-2 border-indigo-500/20 ml-5 pl-2.5 space-y-1 my-1.5 transition-all">
+                <ul className="border-l-2 border-slate-200 dark:border-slate-800/80 ml-5 pl-2.5 space-y-1 my-1.5 transition-all">
                   {items.map((it) => (
                     <li key={it.to}>
                       <NavLink
@@ -250,8 +236,8 @@ function Sidebar({ me, onNavigate }: { me?: Me; onNavigate?: () => void }) {
                         className={({ isActive }) => cn(
                           'flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
                           isActive
-                            ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold shadow-sm shadow-indigo-600/30'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
+                            ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-semibold shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-900/60'
                         )}
                       >
                         <it.icon className="size-3.5 shrink-0" />
@@ -267,21 +253,20 @@ function Sidebar({ me, onNavigate }: { me?: Me; onNavigate?: () => void }) {
       </div>
 
       {/* Pastki qism */}
-      <div className="pt-3 border-t border-slate-800/80 flex flex-col gap-1 text-[11px] text-slate-400">
+      <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col gap-1 text-[11px] text-slate-500 dark:text-slate-400">
         <Link 
           to="/" 
           onClick={onNavigate}
-          className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg hover:bg-slate-900 hover:text-white transition-colors text-indigo-400 font-medium"
+          className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-900 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-slate-600 dark:text-slate-400 font-medium"
         >
           <Globe className="size-3.5" />
           <span>asliddin2426.uz saytiga o‘tish</span>
         </Link>
-        <span className="text-center text-[10px] text-slate-600">© Edu Masters • 2026</span>
+        <span className="text-center text-[10px] text-slate-400 dark:text-slate-600">© Edu Masters • 2026</span>
       </div>
     </nav>
   )
 }
-
 function UserMenu({ me }: { me?: Me }) {
   const [open, setOpen] = useState(false)
   const ref = useOutside<HTMLDivElement>(() => setOpen(false))
@@ -358,9 +343,9 @@ export function AppShell() {
   }, [])
 
   return (
-    <div className="min-h-screen lg:pl-64 bg-background text-foreground font-sans selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen lg:pl-64 bg-slate-100/60 dark:bg-slate-950 text-foreground font-sans selection:bg-indigo-500 selection:text-white">
       {/* Chap Asosiy Menyu (Sidebar) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 bg-slate-950 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 bg-slate-50/95 dark:bg-slate-950 border-r border-slate-200/90 dark:border-slate-800/80 lg:block">
         <Sidebar me={me} />
       </aside>
 
@@ -368,8 +353,8 @@ export function AppShell() {
       {drawer && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDrawer(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-slate-950 shadow-2xl">
-            <button onClick={() => setDrawer(false)} aria-label="Yopish" className="absolute right-3.5 top-3.5 rounded-xl p-1 text-slate-400 hover:bg-slate-900 hover:text-white">
+          <aside className="absolute inset-y-0 left-0 w-72 bg-slate-50 dark:bg-slate-950 shadow-2xl">
+            <button onClick={() => setDrawer(false)} aria-label="Yopish" className="absolute right-3.5 top-3.5 rounded-xl p-1 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white">
               <X className="size-5" />
             </button>
             <Sidebar me={me} onNavigate={() => setDrawer(false)} />
@@ -380,7 +365,7 @@ export function AppShell() {
       {/* Asosiy Ish Maydoni */}
       <div className="flex min-h-screen flex-col">
         {/* Tepadagi Header */}
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-surface/80 px-3 backdrop-blur-md sm:px-6 transition-colors">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 px-3 backdrop-blur-md sm:px-6 transition-colors shadow-2xs">
           <Button variant="ghost" size="sm" className="lg:hidden rounded-xl" aria-label="Menyu" onClick={() => setDrawer(true)}>
             <Menu className="size-5" />
           </Button>
@@ -390,11 +375,11 @@ export function AppShell() {
             {/* Spotlight Command Search trigger button */}
             <button
               onClick={() => setCmdOpen(true)}
-              className="hidden sm:flex items-center gap-2.5 rounded-xl border border-line bg-sunken/70 px-3.5 py-2 text-xs text-muted hover:border-brand/40 hover:text-foreground transition-all w-52 md:w-72 shadow-sm"
+              className="hidden sm:flex items-center gap-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/60 px-3.5 py-2 text-xs text-slate-500 dark:text-slate-400 hover:border-indigo-400/50 hover:text-slate-800 dark:hover:text-white transition-all w-52 md:w-72 shadow-2xs"
             >
               <Search className="size-3.5 text-muted" />
               <span className="flex-1 text-left truncate font-medium">Qidiruv yoki buyruq...</span>
-              <kbd className="rounded-lg border border-line bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-muted shadow-xs">Ctrl K</kbd>
+              <kbd className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 shadow-2xs">Ctrl K</kbd>
             </button>
           </div>
 
@@ -409,13 +394,13 @@ export function AppShell() {
           {/* Yuqori paneldagi Asosiy saytga o'tish tugmasi */}
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm shadow-indigo-600/20 transition-all active:scale-95 shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100/90 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-200/90 dark:border-slate-700/80 transition-all active:scale-95 shrink-0"
             title="Asosiy ommaviy sayt sahifasiga o'tish"
           >
-            <Globe className="size-3.5" />
+            <Globe className="size-3.5 text-indigo-600 dark:text-indigo-400" />
             <span className="hidden md:inline">Asosiy saytga qaytish</span>
             <span className="md:hidden">Saytga</span>
-            <ArrowUpRight className="size-3 text-indigo-200" />
+            <ArrowUpRight className="size-3 text-slate-400" />
           </Link>
 
           <ThemeToggle />
