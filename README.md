@@ -37,7 +37,7 @@ docker-compose up --build -d
 
 Ishga tushgach:
 * **Asosiy sayt (Landing Page):** `http://localhost:3000/`
-* **Admin / Xodimlar kirish:** `http://localhost:3000/afdmr2426` (yoki `/login`)
+* **Xodimlar kabineti:** Boshqaruv paneliga kirish (faqat vakolatli xodimlar uchun)
 * **Backend API (Swagger Docs):** `http://localhost:8000/`
 
 Dastlabki administrator va ma'lumotlarni yuklash (seed):
